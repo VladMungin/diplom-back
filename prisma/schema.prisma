@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
+  password  String
+  name      String
+  companyId Int
+  company   Company    @relation(fields: [companyId], references: [id])
+  employees Employee[]
+  projects  Project[]
+
+  Project Project[] @relation("UserProjects")
+}
+
+model Company {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  users     User[]
+  employees Employee[]
+}
+
+model Employee {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  projects  Project[] @relation("EmployeeProjects")
+  companyId Int
+  company   Company   @relation(fields: [companyId], references: [id])
+  tasks     Task[]    @relation("EmployeeTasks")
+
+  User User[]
+
+  Task Task[]
+}
+
+model Project {
+  id          Int        @id @default(autoincrement())
+  name        String
+  description String?
+  userId      Int
+  users       User[]     @relation("UserProjects")
+  employees   Employee[] @relation("EmployeeProjects")
+  tasks       Task[]
+
+  User User[]
+}
+
+model Task {
+  id             Int        @id @default(autoincrement())
+  title          String
+  description    String?
+  type           String
+  projectId      Int
+  employeeId     Int
+  comment        String
+  project        Project    @relation(fields: [projectId], references: [id])
+  employee       Employee   @relation(fields: [employeeId], references: [id])
+  createdAt      DateTime   @default(now()) @map("created_at")
+  timeToComleate Int        @map("time_to_compleate")
+  currentTime    Int        @map("current_time")
+  status         String     @default("PENDING")
+  Employee       Employee[] @relation("EmployeeTasks")
+}

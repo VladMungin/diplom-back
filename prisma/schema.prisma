@@ -16,8 +16,8 @@ model User {
   password  String
   name      String
   role      String
-  companyId String
-  company   Company    @relation(fields: [companyId], references: [id])
+  companyId String?
+  company   Company?   @relation(fields: [companyId], references: [id])
   employees Employee[]
   projects  Project[]
 

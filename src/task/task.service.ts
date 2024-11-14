@@ -11,20 +11,12 @@ export class TaskService {
 
     return this.prisma.task.create({
       data: {
-        // ...task,
-        title: 'Task 1',
-        description: 'Task description',
-        type: 'Task type',
-        comment: 'Task comment',
-        timeToCompleat: 30000,
-        currentTime: 40000,
-
-        status: 'created',
+        ...task,
         project: {
-          connect: { id: '' },
+          connect: { id: projectId },
         },
         employee: {
-          connect: { id: '' },
+          connect: { id: employeeId },
         },
       },
     })

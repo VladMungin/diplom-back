@@ -38,13 +38,19 @@ export class ProjectService {
     })
   }
 
-  update(id: string, dto: UpdateProjectDto) {
+  async update(id: string, dto: UpdateProjectDto) {
+    const oldProject = await this.prisma.project.findUnique({
+      where: {
+        id,
+      },
+    })
+
     return this.prisma.project.update({
       where: {
         id,
       },
-
       data: {
+        ...oldProject,
         ...dto,
       },
     })

@@ -1,13 +1,18 @@
-import { Employee, User } from '@prisma/client'
-import { IsArray, IsString } from 'class-validator'
+import { IsArray, IsOptional, IsString } from 'class-validator'
 
 export class CompanyDto {
   @IsString()
   name: string
 
   @IsArray()
-  users: User[]
+  @IsOptional()
+  userIds: string[]
 
   @IsArray()
-  employee: Employee[]
+  @IsOptional()
+  employeeIds: string[]
+
+  @IsArray()
+  @IsOptional()
+  projectIds: string[]
 }

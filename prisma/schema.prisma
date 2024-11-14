@@ -61,18 +61,21 @@ model Project {
 }
 
 model Task {
-  id             Int        @id @default(autoincrement())
-  title          String
-  description    String?
-  type           String
-  projectId      String
-  employeeId     String
-  comment        String
-  project        Project    @relation(fields: [projectId], references: [id])
-  employee       Employee   @relation(fields: [employeeId], references: [id])
-  createdAt      DateTime   @default(now()) @map("created_at")
-  timeToComleate Int        @map("time_to_compleate")
-  currentTime    Int        @map("current_time")
-  status         String     @default("PENDING")
-  Employee       Employee[] @relation("EmployeeTasks")
+  id          Int     @id @default(autoincrement())
+  title       String
+  description String?
+  type        String
+  projectId   String
+  employeeId  String
+  comment     String
+
+  project  Project  @relation(fields: [projectId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  createdAt      DateTime @default(now()) @map("created_at")
+  timeToCompleat Int      @map("time_to_compleate")
+  currentTime    Int      @map("current_time")
+  status         String   @default("PENDING")
+
+  Employee Employee[] @relation("EmployeeTasks")
 }

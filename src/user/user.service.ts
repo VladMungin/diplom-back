@@ -39,6 +39,22 @@ export class UserService {
     })
   }
 
+  async update(id: string, dto: AuthDto) {
+    const user = {
+      email: dto.email,
+      name: dto.name,
+      password: await hash(dto.password),
+    }
+    return this.prisma.user.update({
+      where: {
+        id,
+      },
+      data: {
+        ...user,
+      },
+    })
+  }
+
   // async createEmployee(dto: AuthDto, userId: string) {
   //   const user = {
   //     email: dto.email,

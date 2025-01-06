@@ -100,4 +100,32 @@ export class EmployeeService {
       },
     })
   }
+
+  async getLeastBusyEmployee() {
+    const employeesWithTaskTimes = await this.prisma.employee.findMany({
+      include: {
+        tasks: {
+          select: {
+            currentTime: true,
+          },
+        },
+      },
+    })
+
+    const employeesWithTotalTimes = employeesWithTaskTimes.map(employee => {
+      const totalCurrentTime = employee.tasks.reduce((total, task) => total + task.currentTime, 0)
+      return {
+        id: employee.id,
+        name: employee.name,
+        totalCurrentTime,
+      }
+    })
+
+    // Находим сотрудника с наименьшей загруженностью
+    const leastBusyEmployee = employeesWithTotalTimes.reduce((prev, current) => {
+      return prev.totalCurrentTime < current.totalCurrentTime ? prev : current
+    })
+
+    return leastBusyEmployee
+  }
 }

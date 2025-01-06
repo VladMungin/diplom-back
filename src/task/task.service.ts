@@ -1,13 +1,24 @@
 import { Injectable } from '@nestjs/common'
+import { EmployeeService } from 'src/emplyee/employee.service'
 import { PrismaService } from './../prisma.service'
 import { CreateTaskDto } from './dto/create-task.dto'
 import { UpdateTaskDto } from './dto/update-task.dto'
 
 @Injectable()
 export class TaskService {
-  constructor(private readonly prisma: PrismaService) {}
-  create(createTaskDto: CreateTaskDto) {
-    const { projectId, employeeId, ...task } = createTaskDto
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly employee: EmployeeService
+  ) {}
+  async create(createTaskDto: CreateTaskDto) {
+    const { projectId, employeeId, autoSet, ...task } = createTaskDto
+    let currentEmployeeId: string | null = null
+    if (autoSet) {
+      const leastBusyEmployee = await this.employee.getLeastBusyEmployee()
+      currentEmployeeId = leastBusyEmployee?.id || null
+    } else {
+      currentEmployeeId = employeeId
+    }
 
     return this.prisma.task.create({
       data: {
@@ -16,7 +27,7 @@ export class TaskService {
           connect: { id: projectId },
         },
         employee: {
-          connect: { id: employeeId },
+          connect: { id: currentEmployeeId },
         },
       },
     })

@@ -1,11 +1,17 @@
 import { Injectable } from '@nestjs/common'
 import { hash } from 'argon2'
 import { AuthDto } from 'src/auth/dto/auth.dto'
+import { CompanyService } from 'src/company/company.service'
 import { PrismaService } from 'src/prisma.service'
+import { RoleService } from 'src/role/role.service'
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private company: CompanyService,
+    private role: RoleService
+  ) {}
 
   async getById(id: string) {
     return this.prisma.user.findUnique({
@@ -33,12 +39,24 @@ export class UserService {
       password: await hash(dto.password),
     }
 
+    const company = await this.company.create({
+      name: dto.companyName,
+    })
+
+    const role = await this.role.create({
+      name: 'Admin',
+      canEditEmployee: true,
+      canEditProject: true,
+      canEditTask: true,
+      canEditSpecialization: true,
+      canEditRole: true,
+    })
+
     return this.prisma.user.create({
       data: {
         ...user,
-        company: {
-          // connect:
-        },
+        companyId: company.id,
+        roleId: role.id,
       },
     })
   }

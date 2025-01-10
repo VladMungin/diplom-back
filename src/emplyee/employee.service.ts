@@ -102,18 +102,19 @@ export class EmployeeService {
     })
 
     const oldUser = await this.prisma.user.findFirst({
-      where:{
-        email: oldEmployee.email
-      }
+      where: {
+        email: oldEmployee.email,
+      },
     })
 
     await this.prisma.user.update({
-      where:{
-        id: oldUser.id
+      where: {
+        id: oldUser.id,
       },
-      data:{
-        
-      }
+      data: {
+        email: email || oldUser.email,
+        name: fullName || oldUser.name,
+      },
     })
 
     return await this.prisma.employee.update({
@@ -121,19 +122,26 @@ export class EmployeeService {
         id,
       },
       data: {
-        ...oldEmployee,
-        ...updateEmployeeDto,
-        projects: {
-          connect: projectIds.map(id => ({ id })),
-        },
-        tasks: {
-          connect: taskIds.map(id => ({ id })),
-        },
+        fullName: fullName || oldEmployee.fullName,
+        phone: phone || oldEmployee.phone,
+        email: email || oldEmployee.email,
       },
     })
   }
 
-  remove(id: string) {
+  async remove(id: string) {
+    const employee = await this.prisma.employee.findUnique({
+      where: {
+        id,
+      },
+    })
+
+    this.prisma.user.delete({
+      where: {
+        email: employee.email,
+      },
+    })
+
     return this.prisma.employee.delete({
       where: {
         id,
@@ -156,7 +164,7 @@ export class EmployeeService {
       const totalCurrentTime = employee.tasks.reduce((total, task) => total + task.currentTime, 0)
       return {
         id: employee.id,
-        name: employee.name,
+        name: employee.fullName,
         totalCurrentTime,
       }
     })

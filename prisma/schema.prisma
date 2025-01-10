@@ -12,7 +12,7 @@ datasource db {
 
 model User {
   id              String     @id @default(uuid())
-  email           String
+  email           String     @unique
   password        String
   name            String
   createdEmployee Employee[]
@@ -34,7 +34,7 @@ model Company {
 model Employee {
   id               String         @id @default(uuid())
   fullName         String
-  email            String
+  email            String         @unique
   phone            String
   role             Role           @relation(fields: [roleId], references: [id])
   roleId           String

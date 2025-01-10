@@ -6,6 +6,7 @@ import { SpecializationService } from 'src/specialization/specialization.service
 import { UserService } from 'src/user/user.service'
 import { CreateEmployeeDto } from './dto/create-employee.dto'
 import { UpdateEmployeeDto } from './dto/update-employee.dto'
+import { Specialization } from '@prisma/client'
 
 @Injectable()
 export class EmployeeService {

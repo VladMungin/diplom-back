@@ -60,20 +60,20 @@ model Project {
 
 model Task {
   id               Int            @id @default(autoincrement())
+  status           String         @default("PENDING")
   title            String
   description      String
-  employee         Employee       @relation(fields: [employeeId], references: [id])
   employeeId       String
-  project          Project        @relation(fields: [projectId], references: [id])
   projectId        String
   createdAt        DateTime       @default(now()) @map("created_at")
   timeToCompleat   Int            @map("time_to_compleate")
   currentTime      Int            @map("current_time")
-  status           String         @default("PENDING")
-  specialization   Specialization @relation(fields: [specializationId], references: [id])
-  specializationId String
-  type             TypeOfTask     @relation(fields: [typeOfTaskId], references: [id])
   typeOfTaskId     String         @map("type_of_task_id")
+  specializationId String
+  employee         Employee       @relation(fields: [employeeId], references: [id])
+  project          Project        @relation(fields: [projectId], references: [id])
+  specialization   Specialization @relation(fields: [specializationId], references: [id])
+  type             TypeOfTask     @relation(fields: [typeOfTaskId], references: [id])
 }
 
 model Specialization {

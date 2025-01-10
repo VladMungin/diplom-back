@@ -11,7 +11,7 @@ export class TaskService {
     private readonly employee: EmployeeService
   ) {}
   async create(createTaskDto: CreateTaskDto) {
-    const { projectId, employeeId, autoSet, ...task } = createTaskDto
+    const { projectId, employeeId, specializationId, typeOfTaskId, autoSet, ...task } = createTaskDto
     let currentEmployeeId: string | null = null
     if (autoSet) {
       const leastBusyEmployee = await this.employee.getLeastBusyEmployee()
@@ -29,6 +29,14 @@ export class TaskService {
         employee: {
           connect: { id: currentEmployeeId },
         },
+        specialization: {
+          connect: { id: specializationId },
+        },
+        type: {
+          connect: {
+            id: typeOfTaskId,
+          },
+        },
       },
     })
   }
@@ -38,19 +46,20 @@ export class TaskService {
   }
 
   findOne(id: number) {
-    return this.prisma.task.findUnique({ where: { id: id } })
+    return this.prisma.task.findUnique({ where: { id } })
   }
 
   update(id: number, updateTaskDto: UpdateTaskDto) {
     // const oldTask = this.prisma.task.findUnique({
     //   where: { id: id },
     // })
-    const currentData = {
-      ...updateTaskDto,
-    }
+    // const currentData = {
+    //   ...updateTaskDto,
+    // }
+    const { specialization, type, status, ...rest } = updateTaskDto
     return this.prisma.task.update({
-      where: { id: id },
-      data: currentData,
+      where: { id },
+      data: { ...rest },
     })
   }
 

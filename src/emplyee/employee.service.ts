@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma.service'
 import { UserService } from 'src/user/user.service'
 import { CreateEmployeeDto } from './dto/create-employee.dto'
 import { UpdateEmployeeDto } from './dto/update-employee.dto'
+import { Specialization } from '@prisma/client'
 
 @Injectable()
 export class EmployeeService {
@@ -11,22 +12,53 @@ export class EmployeeService {
     private userService: UserService
   ) {}
   async create(createEmployeeDto: CreateEmployeeDto) {
-    const { fullName, companyId, email, password } = createEmployeeDto
+    const { fullName, companyId, email, password, phone, userId } = createEmployeeDto
+    const role = await this.role.create({
+      name: 'Employee',
+    })
+
     const user = {
-      fullName,
+      name: fullName,
       email,
       password,
-      role: 'employee',
+      roleId: role.id,
+      companyId,
+    }
+
+    let currentSpecialization: Specialization | null
+
+    const specialization = await this.specialization.findOne(createEmployeeDto.specialization)
+
+    if (!specialization) {
+      currentSpecialization = await this.specialization.create({
+        name: createEmployeeDto.specialization,
+      })
+    } else {
+      currentSpecialization = specialization
     }
 
     const employee = await this.prisma.employee.create({
       data: {
         fullName,
+        phone,
         email,
         company: {
           connect: {
             id: companyId,
           },
+        },
+        role: {
+          connect: {
+            id: role.id,
+          },
+        },
+        specialization: {
+          connect: {
+            id: currentSpecialization.id,
+          },
+        },
+        user: {
+          connect: { id: userId },
         },
       },
     })

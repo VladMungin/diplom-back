@@ -7,7 +7,7 @@ import { UpdateSpecializationDto } from './dto/update-specialization.dto'
 export class SpecializationService {
   constructor(private prisma: PrismaService) {}
   async create(createSpecializationDto: CreateSpecializationDto) {
-    return this.prisma.specialization.create({
+    return await this.prisma.specialization.create({
       data: {
         name: createSpecializationDto.name,
       },
@@ -18,10 +18,15 @@ export class SpecializationService {
     return this.prisma.specialization.findMany()
   }
 
-  findOne(id: string) {
-    return this.prisma.specialization.findFirst({
+  async findOne(id: string) {
+    const specialization = await this.prisma.specialization.findFirst({
       where: { id },
     })
+
+    return {
+      name: specialization.name,
+      id: specialization.id,
+    }
   }
 
   async update(id: string, updateSpecializationDto: UpdateSpecializationDto) {

@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common'
+import { Specialization } from '@prisma/client'
 import { PrismaService } from 'src/prisma.service'
+import { RoleService } from 'src/role/role.service'
+import { SpecializationService } from 'src/specialization/specialization.service'
 import { UserService } from 'src/user/user.service'
 import { CreateEmployeeDto } from './dto/create-employee.dto'
 import { UpdateEmployeeDto } from './dto/update-employee.dto'
@@ -8,25 +11,58 @@ import { UpdateEmployeeDto } from './dto/update-employee.dto'
 export class EmployeeService {
   constructor(
     private prisma: PrismaService,
-    private userService: UserService
+    private userService: UserService,
+    private role: RoleService,
+    private specialization: SpecializationService
   ) {}
   async create(createEmployeeDto: CreateEmployeeDto) {
-    const { name, companyId, email, password } = createEmployeeDto
+    const { fullName, companyId, email, password, phone, userId } = createEmployeeDto
+    const role = await this.role.create({
+      name: 'Employee',
+    })
+
     const user = {
-      name,
+      name: fullName,
       email,
       password,
-      role: 'employee',
+      roleId: role.id,
+      companyId,
+    }
+
+    let currentSpecialization: Specialization | null
+
+    const specialization = await this.specialization.findOne(createEmployeeDto.specialization)
+
+    if (!specialization) {
+      currentSpecialization = await this.specialization.create({
+        name: createEmployeeDto.specialization,
+      })
+    } else {
+      currentSpecialization = specialization
     }
 
     const employee = await this.prisma.employee.create({
       data: {
-        name,
+        fullName,
+        phone,
         email,
         company: {
           connect: {
             id: companyId,
           },
+        },
+        role: {
+          connect: {
+            id: role.id,
+          },
+        },
+        specialization: {
+          connect: {
+            id: currentSpecialization.id,
+          },
+        },
+        user: {
+          connect: { id: userId },
         },
       },
     })
@@ -45,7 +81,7 @@ export class EmployeeService {
           id: userId,
         },
       })
-      .employees()
+      .createdEmployee()
   }
 
   findOne(id: string) {
@@ -57,8 +93,7 @@ export class EmployeeService {
   }
 
   async update(id: string, updateEmployeeDto: UpdateEmployeeDto) {
-    const { email, name, password, projectIds, taskIds } = updateEmployeeDto
-    const updateUser = email || name || password
+    const { email, fullName, phone } = updateEmployeeDto
 
     const oldEmployee = await this.prisma.employee.findUnique({
       where: {
@@ -66,15 +101,20 @@ export class EmployeeService {
       },
     })
 
-    if (updateUser) {
-      const newUser = {
-        email,
-        name,
-        password,
+    const oldUser = await this.prisma.user.findFirst({
+      where:{
+        email: oldEmployee.email
       }
+    })
 
-      await this.userService.update(id, newUser)
-    }
+    await this.prisma.user.update({
+      where:{
+        id: oldUser.id
+      },
+      data:{
+        
+      }
+    })
 
     return await this.prisma.employee.update({
       where: {

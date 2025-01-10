@@ -7,13 +7,12 @@ import { UpdateProjectDto } from './dto/update-project.dto'
 export class ProjectService {
   constructor(private prisma: PrismaService) {}
   async create(dto: CreateProjectDto) {
-    const { name, description, companyId, userId, employeeIds } = dto
+    const { name, description, userId, employeeIds } = dto
 
     return this.prisma.project.create({
       data: {
         name,
         description,
-        companyId,
         userId,
         employees: {
           connect: employeeIds.map(id => ({ id })),

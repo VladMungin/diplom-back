@@ -5,5 +5,6 @@ export class CreateEmployeeDto {
   password: string
   projectId: string
   companyId: string
-  specializationId: string
+  specialization: string
+  userId: string
 }

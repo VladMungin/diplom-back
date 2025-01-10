@@ -11,9 +11,9 @@ export class EmployeeService {
     private userService: UserService
   ) {}
   async create(createEmployeeDto: CreateEmployeeDto) {
-    const { name, companyId, email, password } = createEmployeeDto
+    const { fullName, companyId, email, password } = createEmployeeDto
     const user = {
-      name,
+      fullName,
       email,
       password,
       role: 'employee',
@@ -21,7 +21,7 @@ export class EmployeeService {
 
     const employee = await this.prisma.employee.create({
       data: {
-        name,
+        fullName,
         email,
         company: {
           connect: {

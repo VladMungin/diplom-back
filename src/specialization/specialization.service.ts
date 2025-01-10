@@ -23,6 +23,10 @@ export class SpecializationService {
       where: { id },
     })
 
+    if (!specialization) {
+      return null
+    }
+
     return {
       name: specialization.name,
       id: specialization.id,

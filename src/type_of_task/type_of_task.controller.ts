@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { TypeOfTaskService } from './type_of_task.service';
-import { CreateTypeOfTaskDto } from './dto/create-type_of_task.dto';
-import { UpdateTypeOfTaskDto } from './dto/update-type_of_task.dto';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common'
+import { CreateTypeOfTaskDto } from './dto/create-type_of_task.dto'
+import { UpdateTypeOfTaskDto } from './dto/update-type_of_task.dto'
+import { TypeOfTaskService } from './type_of_task.service'
 
 @Controller('type-of-task')
 export class TypeOfTaskController {
@@ -9,26 +9,26 @@ export class TypeOfTaskController {
 
   @Post()
   create(@Body() createTypeOfTaskDto: CreateTypeOfTaskDto) {
-    return this.typeOfTaskService.create(createTypeOfTaskDto);
+    return this.typeOfTaskService.create(createTypeOfTaskDto)
   }
 
   @Get()
   findAll() {
-    return this.typeOfTaskService.findAll();
+    return this.typeOfTaskService.findAll()
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.typeOfTaskService.findOne(+id);
+    return this.typeOfTaskService.findOne(id)
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTypeOfTaskDto: UpdateTypeOfTaskDto) {
-    return this.typeOfTaskService.update(+id, updateTypeOfTaskDto);
+    return this.typeOfTaskService.update(id, updateTypeOfTaskDto)
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.typeOfTaskService.remove(+id);
+    return this.typeOfTaskService.remove(id)
   }
 }

@@ -12,16 +12,16 @@ export class UserService {
       where: { id },
       include: {
         company: true,
-        employees: true,
+        createdEmployee: true,
         projects: true,
       },
     })
   }
 
   async getByEmail(email: string) {
-    return this.prisma.user.findUnique({
+    return this.prisma.user.findFirst({
       where: {
-        email,
+        email: email,
       },
     })
   }
@@ -31,11 +31,15 @@ export class UserService {
       email: dto.email,
       name: dto.name,
       password: await hash(dto.password),
-      role: 'admin',
     }
 
     return this.prisma.user.create({
-      data: user,
+      data: {
+        ...user,
+        company: {
+          // connect:
+        },
+      },
     })
   }
 

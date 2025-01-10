@@ -16,11 +16,9 @@ model User {
   password        String
   name            String
   createdEmployee Employee[]
-  projects        Project[]
+  Project         Project[]
   role            Role       @relation(fields: [roleId], references: [id])
   roleId          String
-  company         Company    @relation(fields: [companyId], references: [id])
-  companyId       String
 }
 
 model Company {
@@ -28,7 +26,6 @@ model Company {
   name String
 
   employees Employee[]
-  user      User[]
 }
 
 model Employee {

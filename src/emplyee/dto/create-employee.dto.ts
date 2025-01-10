@@ -1,7 +1,10 @@
 export class CreateEmployeeDto {
-  name: string
+  fullName: string
   email: string
+  phone: string
   password: string
   projectId: string
   companyId: string
+  specialization: string
+  userId: string
 }

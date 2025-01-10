@@ -10,9 +10,6 @@ export class CreateProjectDto {
   description?: string
 
   @IsString()
-  companyId: string // Идентификатор компании, к которой принадлежит проект
-
-  @IsString()
   userId: string // Идентификатор пользователя, создавшего проект
 
   @IsArray()

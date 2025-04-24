@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import { Specialization } from '@prisma/client'
 import { PrismaService } from 'src/prisma.service'
 import { RoleService } from 'src/role/role.service'
+import { SpecializationDto } from 'src/specialization/dto/create-specialization.dto'
 import { SpecializationService } from 'src/specialization/specialization.service'
 import { UserService } from 'src/user/user.service'
 import { CreateEmployeeDto } from './dto/create-employee.dto'
@@ -29,7 +29,7 @@ export class EmployeeService {
       companyId,
     }
 
-    let currentSpecialization: Specialization | null
+    let currentSpecialization: SpecializationDto | null
 
     const specialization = await this.specialization.findOne(createEmployeeDto.specialization)
 

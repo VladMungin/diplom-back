@@ -1,14 +1,17 @@
-version: '3.8'
-
 services:
-  app:
-    build: .
+  nestjs_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - '3000:3000'
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - ./data:/data
     environment:
-      DATABASE_URL: 'file:/data/dev.db'
-      JWT_SECRET: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+      - PORT=3000
+      - NODE_ENV=development
+    volumes:
+      - ./src:/usr/src/app/src
+  sqlite_db:
+    image: alpine/sqlite
+    ports: -'3307:3307'
+    environment:
+      - JWT_SECRET=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9

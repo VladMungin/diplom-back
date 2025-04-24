@@ -14,7 +14,7 @@ export class TaskService {
     const { projectId, employeeId, specializationId, typeOfTaskId, autoSet, ...task } = createTaskDto
     let currentEmployeeId: string | null = null
     if (autoSet) {
-      const leastBusyEmployee = await this.employee.getLeastBusyEmployee()
+      const leastBusyEmployee = await this.employee.getLeastBusyEmployee(specializationId)
       currentEmployeeId = leastBusyEmployee?.id || null
     } else {
       currentEmployeeId = employeeId

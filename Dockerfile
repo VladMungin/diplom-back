@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN npm install
+RUN yarn 
 
 RUN npm run build:nest
 

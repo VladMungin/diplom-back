@@ -149,8 +149,15 @@ export class EmployeeService {
     })
   }
 
-  async getLeastBusyEmployee() {
+  async getLeastBusyEmployee(specializationId: string) {
+    // Находим всех сотрудников с указанной специализацией и хотя бы одной задачей
     const employeesWithTaskTimes = await this.prisma.employee.findMany({
+      where: {
+        specializationId: specializationId,
+        tasks: {
+          some: {}, // Убеждаемся, что у сотрудника есть хотя бы одна задача
+        },
+      },
       include: {
         tasks: {
           select: {
@@ -160,19 +167,25 @@ export class EmployeeService {
       },
     })
 
-    const employeesWithTotalTimes = employeesWithTaskTimes.map(employee => {
-      const totalCurrentTime = employee.tasks.reduce((total, task) => total + task.currentTime, 0)
+    // Если нет подходящих сотрудников, возвращаем null или выбрасываем ошибку
+    if (employeesWithTaskTimes.length === 0) {
+      return null
+      // или throw new Error('No employees with the specified specialization and tasks found');
+    }
+
+    // Рассчитываем общее время задач для каждого сотрудника
+    const employeesWithTotalTime = employeesWithTaskTimes.map(employee => {
+      const totalTime = employee.tasks.reduce((sum, task) => sum + task.currentTime, 0)
       return {
-        id: employee.id,
-        name: employee.fullName,
-        totalCurrentTime,
+        ...employee,
+        totalTime,
       }
     })
 
-    // Находим сотрудника с наименьшей загруженностью
-    const leastBusyEmployee = employeesWithTotalTimes.reduce((prev, current) => {
-      return prev.totalCurrentTime < current.totalCurrentTime ? prev : current
-    })
+    // Находим сотрудника с минимальным общим временем задач
+    const leastBusyEmployee = employeesWithTotalTime.reduce((prev, current) =>
+      prev.totalTime < current.totalTime ? prev : current
+    )
 
     return leastBusyEmployee
   }

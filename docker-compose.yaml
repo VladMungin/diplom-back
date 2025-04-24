@@ -10,8 +10,3 @@ services:
       - NODE_ENV=development
     volumes:
       - ./src:/usr/src/app/src
-  sqlite_db:
-    image: alpine/sqlite
-    ports: -'3307:3307'
-    environment:
-      - JWT_SECRET=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9

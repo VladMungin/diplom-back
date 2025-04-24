@@ -1,36 +1,36 @@
-FROM node:18-alpine AS builder
+# Базовый образ Node.js
+FROM node:20
 
-RUN apk add --no-cache openssl python3 make g++
+# Устанавливаем необходимые зависимости для Prisma (openssl и другие)
+RUN apt-get update && apt-get install -y \
+    openssl \
+    curl \
+    bash \
+    && apt-get clean
 
-WORKDIR /usr/src/app
+# Создаем рабочую директорию
+WORKDIR /app
 
+# Копируем только Prisma файлы сначала (чтобы использовать кеширование)
+COPY prisma ./prisma/
+
+# Копируем файлы зависимостей
 COPY package*.json ./
 
+# Устанавливаем зависимости
 RUN npm install
 
-# Копируем ВСЕ файлы, включая prisma/schema.prisma
-COPY . .
-
-# Теперь schema.prisma уже на месте — можно вызывать generate
+# Генерируем Prisma клиент
 RUN npx prisma generate
 
-RUN npm run build
+# Копируем остальные файлы проекта
+COPY . .
 
-FROM node:18-alpine AS production
+# Собираем проект (если используется TypeScript)
+RUN npm run build:nest
 
-RUN apk add --no-cache openssl sqlite
-
-WORKDIR /usr/src/app
-
-COPY --from=builder /usr/src/app/package*.json ./
-COPY --from=builder /usr/src/app/node_modules ./node_modules
-COPY --from=builder /usr/src/app/dist ./dist
-COPY --from=builder /usr/src/app/prisma ./prisma
-
-ENV DATABASE_URL="file:/data/dev.db"
-
+# Открываем порт, который использует приложение
 EXPOSE 3000
 
-USER node
-
-CMD ["node", "dist/main"]
+# Команда для запуска приложения
+CMD ["npm", "run", "start:nest"]

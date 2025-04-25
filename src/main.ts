@@ -18,11 +18,12 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('swagger', app, document)
 
-  // app.enableCors({
-  //   origin: ['http://localhost:3000'],
-  //   credentials: true,
-  //   exposedHeaders: 'set-cookie',
-  // })
+  app.enableCors({
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+    exposedHeaders: 'set-cookie',
+  })
   const port = process.env.PORT || 3000
   await app.listen(port)
 }

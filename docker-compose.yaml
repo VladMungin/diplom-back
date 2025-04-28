@@ -1,11 +1,16 @@
+version: '3.8'
 services:
-  nestjs_api:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+      - ./credentials.json:/app/credentials.json
+    environment:
+      - GOOGLE_DRIVE_FOLDER_ID=${GOOGLE_DRIVE_FOLDER_ID}
+      - PRISMA_CLI_QUERY_ENGINE_TYPE=library
     ports:
       - '3000:3000'
-    environment:
-      - PORT=3000
-    volumes:
-      - ./src:/app/src
+volumes:
+  data:

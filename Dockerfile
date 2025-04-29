@@ -14,4 +14,4 @@ RUN mkdir -p /app/data && chmod -R 777 /app/data
 RUN npx prisma generate
 RUN npm run build
 
-CMD ["npm", "run", "start:prod"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:prod"]

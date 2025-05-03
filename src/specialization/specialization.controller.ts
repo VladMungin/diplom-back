@@ -13,8 +13,8 @@ export class SpecializationController {
   }
 
   @Get()
-  findAll() {
-    return this.specializationService.findAll()
+  findAll(@Body() userId: string) {
+    return this.specializationService.findAll(userId)
   }
 
   @Get(':id')

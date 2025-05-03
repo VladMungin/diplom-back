@@ -12,8 +12,12 @@ export class TypeOfTaskService {
     })
   }
 
-  findAll() {
-    return this.prisma.typeOfTask.findMany()
+  findAll(userId: string) {
+    return this.prisma.typeOfTask.findMany({
+      where: {
+        userId,
+      },
+    })
   }
 
   findOne(id: string) {

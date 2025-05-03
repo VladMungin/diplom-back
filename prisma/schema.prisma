@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider          = "sqlite"
-  url               = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -81,6 +81,7 @@ model Specialization {
   name      String
   tasks     Task[]
   employees Employee[]
+  userId    String
 }
 
 model Role {
@@ -93,11 +94,13 @@ model Role {
   canEditRole           Boolean    @default(false)
   user                  User[]
   employee              Employee[]
+  userId                String
 }
 
 model TypeOfTask {
   id   String @id @default(uuid())
   name String
 
-  task Task[]
+  task   Task[]
+  userId String
 }

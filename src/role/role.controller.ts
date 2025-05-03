@@ -13,8 +13,8 @@ export class RoleController {
   }
 
   @Get()
-  findAll() {
-    return this.roleService.findAll();
+  findAll(@Body() userId: string) {
+    return this.roleService.findAll(userId);
   }
 
   @Get(':id')

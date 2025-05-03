@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+      - ./credentials.json:/app/credentials.json
+    environment:
+      - GOOGLE_DRIVE_FOLDER_ID=${GOOGLE_DRIVE_FOLDER_ID}
+      - PRISMA_CLI_QUERY_ENGINE_TYPE=library
+      - DATABASE_URL=file:/app/data/database.db
+      - DATABASE_PATH=/app/data/database.db
+    ports:
+      - '3000:3000'
+    command: >
+      sh -c "mkdir -p /app/data && chmod -R 777 /app/data && 
+             echo 'Synchronizing schema with prisma db push...' && 
+             npx prisma db push && 
+             echo 'Schema synchronized' && 
+             echo 'Applying Prisma migrations...' && 
+             npx prisma migrate deploy && 
+             echo 'Prisma migrations applied' && 
+             echo 'Checking database file...' && 
+             if [ -f /app/data/database.db ]; then 
+               echo 'Database file exists'; 
+             else 
+               echo 'Database file not found'; 
+             fi && 
+             npm run start:prod"
+volumes:
+  data:

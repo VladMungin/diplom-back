@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  prisma-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile.studio
+    volumes:
+      - ./data:/app/data
+      - ./prisma:/app/prisma
+    environment:
+      - DATABASE_URL=file:/app/data/database.db
+      - PRISMA_CLI_QUERY_ENGINE_TYPE=library
+    ports:
+      - '5555:5555'
+    command: >
+      sh -c "echo 'Starting Prisma Studio...' && 
+             if [ -f /app/data/database.db ]; then 
+               echo 'Database file exists'; 
+             else 
+               echo 'Database file not found'; 
+             fi && 
+             npx prisma studio --port 5555"
+volumes:
+  data:

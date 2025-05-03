@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "gen": "npx prisma generate",
+    "studio": "docker compose -f docker-compose.studio.yml up",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start:nest": "nest start",

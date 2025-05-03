@@ -12,8 +12,16 @@ export class RoleService {
     })
   }
 
-  findAll() {
-    return this.prisma.role.findMany()
+  findAll(userId: string) {
+    return this.prisma.role.findMany({
+      where: {
+        user: {
+          some: {
+            id: userId,
+          },
+        },
+      },
+    })
   }
 
   findOne(id: string) {

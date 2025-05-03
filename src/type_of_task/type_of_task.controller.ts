@@ -13,8 +13,8 @@ export class TypeOfTaskController {
   }
 
   @Get()
-  findAll() {
-    return this.typeOfTaskService.findAll()
+  findAll(@Body() userId: string) {
+    return this.typeOfTaskService.findAll(userId)
   }
 
   @Get(':id')

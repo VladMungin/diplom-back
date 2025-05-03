@@ -10,12 +10,17 @@ export class SpecializationService {
     return await this.prisma.specialization.create({
       data: {
         name: createSpecializationDto.name,
+        userId: createSpecializationDto.userId
       },
     })
   }
 
-  findAll() {
-    return this.prisma.specialization.findMany()
+  findAll(userId: string) {
+    return this.prisma.specialization.findMany({
+      where:{
+        userId
+      }
+    })
   }
 
   async findOne(id: string) {

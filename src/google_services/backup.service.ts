@@ -22,7 +22,6 @@ export class BackupService implements OnApplicationBootstrap {
     if (!this.folderId) {
       throw new Error('GOOGLE_DRIVE_FOLDER_ID не указан в переменных окружения')
     }
-    // Проверка пути к базе данных при старте
     if (!existsSync(this.databasePath)) {
       this.logger.warn(`Файл базы данных не найден по пути ${this.databasePath}. Он будет создан при первой записи.`)
     } else {
@@ -43,7 +42,6 @@ export class BackupService implements OnApplicationBootstrap {
       }
     } catch (error) {
       this.logger.error('Не удалось проверить или создать начальный бэкап', error.stack)
-      // Не выбрасываем ошибку, чтобы приложение продолжило работу
     }
   }
 
@@ -61,61 +59,91 @@ export class BackupService implements OnApplicationBootstrap {
     function safeStringify(obj: any): string {
       return JSON.stringify(obj, (_, value) => (typeof value === 'bigint' ? value.toString() : value))
     }
+
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const backupFileName = `backup-${timestamp}.db`
+
     try {
-      // Принудительная фиксация изменений в SQLite
       const checkpointResult = await this.prisma.$queryRaw`PRAGMA wal_checkpoint(FULL);`
       this.logger.log(`Результат чекпоинта WAL: ${safeStringify(checkpointResult)}`)
 
-      // Проверка существования таблицы User
-      const tableExists = await this.prisma.$queryRaw<
-        Array<{ name: string }>
-      >`SELECT name FROM sqlite_master WHERE type='table' AND name='User';`
-      if (!tableExists || tableExists.length === 0) {
-        this.logger.warn('Таблица User не существует в базе данных')
+      const stats = existsSync(this.databasePath) ? statSync(this.databasePath) : null
+      if (!stats || stats.size === 0) {
+        this.logger.warn(`Файл базы данных не найден или пуст по пути ${this.databasePath}`)
         return
       }
 
-      // Проверка записей в таблицах User, Company, Role
+      // ===== User =====
       const userCount = await this.prisma.user.count()
-      const companyCount = await this.prisma.company.count()
-      const roleCount = await this.prisma.role.count()
-      this.logger.log(`Записей в таблице User: ${userCount}, Company: ${companyCount}, Role: ${roleCount}`)
-
-      // Логирование примеров записей
+      this.logger.log(`User: ${userCount}`)
       if (userCount > 0) {
-        const users = await this.prisma.user.findMany({
-          take: 2,
-          select: { id: true, email: true, name: true },
-        })
-        this.logger.log(`Пример записей в User: ${JSON.stringify(users, null, 2)}`)
-      }
-      if (companyCount > 0) {
-        const companies = await this.prisma.company.findMany({
-          take: 2,
-          select: { id: true, name: true },
-        })
-        this.logger.log(`Пример записей в Company: ${JSON.stringify(companies, null, 2)}`)
-      }
-      if (roleCount > 0) {
-        const roles = await this.prisma.role.findMany({
-          take: 2,
-          select: { id: true, name: true },
-        })
-        this.logger.log(`Пример записей в Role: ${JSON.stringify(roles, null, 2)}`)
+        const users = await this.prisma.user.findMany({ take: 2, select: { id: true, email: true, name: true } })
+        this.logger.log(`User samples: ${JSON.stringify(users, null, 2)}`)
       }
 
-      // Проверка существования и размера файла базы данных
-      if (!existsSync(this.databasePath)) {
-        this.logger.warn(`Файл базы данных не найден по пути ${this.databasePath}. Пропуск создания бэкапа.`)
-        return
+      // ===== Company =====
+      const companyCount = await this.prisma.company.count()
+      this.logger.log(`Company: ${companyCount}`)
+      if (companyCount > 0) {
+        const companies = await this.prisma.company.findMany({ take: 2, select: { id: true, name: true } })
+        this.logger.log(`Company samples: ${JSON.stringify(companies, null, 2)}`)
       }
-      const stats = statSync(this.databasePath)
-      this.logger.log(`Размер файла базы данных: ${stats.size} байт`)
-      if (stats.size === 0) {
-        this.logger.warn(`Файл базы данных по пути ${this.databasePath} пуст`)
-        return
+
+      // ===== Employee =====
+      const employeeCount = await this.prisma.employee.count()
+      this.logger.log(`Employee: ${employeeCount}`)
+      if (employeeCount > 0) {
+        const employees = await this.prisma.employee.findMany({
+          take: 2,
+          select: { id: true, fullName: true, email: true, phone: true },
+        })
+        this.logger.log(`Employee samples: ${JSON.stringify(employees, null, 2)}`)
+      }
+
+      // ===== Project =====
+      const projectCount = await this.prisma.project.count()
+      this.logger.log(`Project: ${projectCount}`)
+      if (projectCount > 0) {
+        const projects = await this.prisma.project.findMany({
+          take: 2,
+          select: { id: true, name: true, description: true },
+        })
+        this.logger.log(`Project samples: ${JSON.stringify(projects, null, 2)}`)
+      }
+
+      // ===== Task =====
+      const taskCount = await this.prisma.task.count()
+      this.logger.log(`Task: ${taskCount}`)
+      if (taskCount > 0) {
+        const tasks = await this.prisma.task.findMany({
+          take: 2,
+          select: { id: true, status: true, title: true, description: true },
+        })
+        this.logger.log(`Task samples: ${JSON.stringify(tasks, null, 2)}`)
+      }
+
+      // ===== Specialization =====
+      const specializationCount = await this.prisma.specialization.count()
+      this.logger.log(`Specialization: ${specializationCount}`)
+      if (specializationCount > 0) {
+        const specs = await this.prisma.specialization.findMany({ take: 2, select: { id: true, name: true } })
+        this.logger.log(`Specialization samples: ${JSON.stringify(specs, null, 2)}`)
+      }
+
+      // ===== Role =====
+      const roleCount = await this.prisma.role.count()
+      this.logger.log(`Role: ${roleCount}`)
+      if (roleCount > 0) {
+        const roles = await this.prisma.role.findMany({ take: 2, select: { id: true, name: true } })
+        this.logger.log(`Role samples: ${JSON.stringify(roles, null, 2)}`)
+      }
+
+      // ===== TypeOfTask =====
+      const typeCount = await this.prisma.typeOfTask.count()
+      this.logger.log(`TypeOfTask: ${typeCount}`)
+      if (typeCount > 0) {
+        const types = await this.prisma.typeOfTask.findMany({ take: 2, select: { id: true, name: true } })
+        this.logger.log(`TypeOfTask samples: ${JSON.stringify(types, null, 2)}`)
       }
 
       const fileId = await this.googleDriveService.uploadFile(this.databasePath, backupFileName, this.folderId)

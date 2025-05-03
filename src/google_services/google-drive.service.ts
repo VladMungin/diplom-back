@@ -5,6 +5,12 @@ import { join } from 'path'
 
 @Injectable()
 export class GoogleDriveService {
+  listFiles(folderId: string, arg1: string) {
+    throw new Error('Method not implemented.')
+  }
+  deleteFile(id: any) {
+    throw new Error('Method not implemented.')
+  }
   private readonly logger = new Logger(GoogleDriveService.name)
   private drive
 

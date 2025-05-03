@@ -87,7 +87,19 @@ export class UserService {
       })
       this.logger.log(`Компания создана, ID: ${company.id}`)
 
-      this.logger.log(`Создание роли Admin`)
+      // Сначала создаем пользователя без роли
+      this.logger.log(`Создание пользователя с данными: ${JSON.stringify(user)}`)
+      const createdUser = await this.prisma.user.create({
+        data: {
+          ...user,
+          companyId: company.id,
+          roleId: '',
+        },
+      })
+      this.logger.log(`Пользователь успешно создан, ID: ${createdUser.id}, email: ${createdUser.email}`)
+
+      // Теперь создаем роль, передавая userId
+      this.logger.log(`Создание роли Admin для пользователя ${createdUser.id}`)
       const role = await this.role.create({
         name: 'Admin',
         canEditEmployee: true,
@@ -95,19 +107,19 @@ export class UserService {
         canEditTask: true,
         canEditSpecialization: true,
         canEditRole: true,
+        userId: createdUser.id, // Передаем ID пользователя
       })
       this.logger.log(`Роль создана, ID: ${role.id}`)
 
-      this.logger.log(`Создание пользователя с данными: ${JSON.stringify(user)}`)
-      const createdUser = await this.prisma.user.create({
+      // Обновляем пользователя, устанавливая roleId
+      const updatedUser = await this.prisma.user.update({
+        where: { id: createdUser.id },
         data: {
-          ...user,
-          companyId: company.id,
           roleId: role.id,
         },
       })
-      this.logger.log(`Пользователь успешно создан, ID: ${createdUser.id}, email: ${createdUser.email}`)
-      return createdUser
+
+      return updatedUser
     } catch (error) {
       this.logger.error(`Ошибка при создании пользователя: ${error.message}`, error.stack)
       throw new BadRequestException(`Не удалось создать пользователя: ${error.message}`)

@@ -81,7 +81,7 @@ model Specialization {
   name      String
   tasks     Task[]
   employees Employee[]
-  userId    String
+  userId    String?
 }
 
 model Role {
@@ -94,7 +94,7 @@ model Role {
   canEditRole           Boolean    @default(false)
   user                  User[]
   employee              Employee[]
-  userId                String
+  userId                String?
 }
 
 model TypeOfTask {
@@ -102,5 +102,5 @@ model TypeOfTask {
   name String
 
   task   Task[]
-  userId String
+  userId String?
 }

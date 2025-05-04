@@ -14,5 +14,5 @@ export class CreateRoleDto {
   @ApiProperty()
   canEditRole?: boolean
   @ApiProperty()
-  userId: string
+  userId?: string
 }

@@ -111,14 +111,14 @@ export class UserService {
       this.logger.log(`Пользователь успешно создан, ID: ${createdUser.id}, email: ${createdUser.email}`)
 
       // Обновляем Роль, устанавливая userId
-      const updatedUser = await this.prisma.role.update({
+      await this.prisma.role.update({
         where: { id: createdUser.id },
         data: {
           userId: createdUser.id,
         },
       })
 
-      return updatedUser
+      return createdUser
     } catch (error) {
       this.logger.error(`Ошибка при создании пользователя: ${error.message}`, error.stack)
       throw new BadRequestException(`Не удалось создать пользователя: ${error.message}`)

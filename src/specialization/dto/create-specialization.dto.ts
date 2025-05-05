@@ -4,7 +4,7 @@ export class CreateSpecializationDto {
   @ApiProperty()
   name: string
   @ApiProperty()
-  userId: string
+  userId?: string
 }
 
 export class SpecializationDto {

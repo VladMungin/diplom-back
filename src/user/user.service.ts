@@ -87,19 +87,8 @@ export class UserService {
       })
       this.logger.log(`Компания создана, ID: ${company.id}`)
 
-      // Сначала создаем пользователя без роли
-      this.logger.log(`Создание пользователя с данными: ${JSON.stringify(user)}`)
-      const createdUser = await this.prisma.user.create({
-        data: {
-          ...user,
-          companyId: company.id,
-          roleId: '',
-        },
-      })
-      this.logger.log(`Пользователь успешно создан, ID: ${createdUser.id}, email: ${createdUser.email}`)
-
       // Теперь создаем роль, передавая userId
-      this.logger.log(`Создание роли Admin для пользователя ${createdUser.id}`)
+      this.logger.log(`Создание роли Admin для пользователя `)
       const role = await this.role.create({
         name: 'Admin',
         canEditEmployee: true,
@@ -107,15 +96,25 @@ export class UserService {
         canEditTask: true,
         canEditSpecialization: true,
         canEditRole: true,
-        userId: createdUser.id, // Передаем ID пользователя
       })
       this.logger.log(`Роль создана, ID: ${role.id}`)
 
-      // Обновляем пользователя, устанавливая roleId
-      const updatedUser = await this.prisma.user.update({
+      // Сначала создаем пользователя без роли
+      this.logger.log(`Создание пользователя с данными: ${JSON.stringify(user)}`)
+      const createdUser = await this.prisma.user.create({
+        data: {
+          ...user,
+          companyId: company.id,
+          roleId: role.id,
+        },
+      })
+      this.logger.log(`Пользователь успешно создан, ID: ${createdUser.id}, email: ${createdUser.email}`)
+
+      // Обновляем Роль, устанавливая userId
+      const updatedUser = await this.prisma.role.update({
         where: { id: createdUser.id },
         data: {
-          roleId: role.id,
+          userId: createdUser.id,
         },
       })
 

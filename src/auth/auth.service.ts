@@ -31,8 +31,8 @@ export class AuthService {
     const oldUser = await this.userService.getByEmail(dto.email)
 
     if (oldUser) throw new BadRequestException('Пользователь с таким именем уже существует')
-    // eslint-disable-next-line
-    const { password, ...user } = await this.userService.create(dto)
+
+    const { ...user } = await this.userService.create(dto)
 
     const tokens = this.issueToken(user.id)
 

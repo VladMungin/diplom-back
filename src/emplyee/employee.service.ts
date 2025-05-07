@@ -36,7 +36,7 @@ export class EmployeeService {
     if (!specialization) {
       currentSpecialization = await this.specialization.create({
         name: createEmployeeDto.specialization,
-        userId: '',
+        userId: userId,
       })
     } else {
       currentSpecialization = specialization

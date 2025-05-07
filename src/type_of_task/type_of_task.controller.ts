@@ -12,8 +12,8 @@ export class TypeOfTaskController {
     return this.typeOfTaskService.create(createTypeOfTaskDto)
   }
 
-  @Get()
-  findAll(@Body() userId: string) {
+  @Get(':userId')
+  findAll(@Param('userId') userId: string) {
     return this.typeOfTaskService.findAll(userId)
   }
 

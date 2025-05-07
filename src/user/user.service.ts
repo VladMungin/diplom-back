@@ -112,8 +112,9 @@ export class UserService {
 
       // Обновляем Роль, устанавливая userId
       await this.prisma.role.update({
-        where: { id: createdUser.id },
+        where: { id: role.id },
         data: {
+          ...role,
           userId: createdUser.id,
         },
       })

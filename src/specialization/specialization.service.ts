@@ -18,7 +18,7 @@ export class SpecializationService {
   findAll(userId: string) {
     return this.prisma.specialization.findMany({
       where:{
-        userId
+        userId: userId
       }
     })
   }

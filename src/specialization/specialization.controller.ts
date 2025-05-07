@@ -12,8 +12,8 @@ export class SpecializationController {
     return this.specializationService.create(createSpecializationDto)
   }
 
-  @Get()
-  findAll(@Body() userId: string) {
+  @Get(':userId')
+  findAll(@Param('userId') userId: string) {
     return this.specializationService.findAll(userId)
   }
 

@@ -15,7 +15,7 @@ export class TypeOfTaskService {
   findAll(userId: string) {
     return this.prisma.typeOfTask.findMany({
       where: {
-        userId,
+        userId: userId,
       },
     })
   }

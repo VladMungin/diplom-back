@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   HttpCode,
+  Logger,
   Post,
   Req,
   Res,
@@ -15,6 +16,8 @@ import { AuthDto } from './dto/auth.dto'
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthService.name)
+
   constructor(private readonly authService: AuthService) {}
 
   @UsePipes(new ValidationPipe())
@@ -51,8 +54,8 @@ export class AuthController {
   @HttpCode(200)
   @Post('login/access_token')
   async getNewTokens(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    this.logger.log('Log refresh token', req.cookies[this.authService.REFRESH_TOKEN_NAME])
     const refreshTokenFromCookies = req.cookies[this.authService.REFRESH_TOKEN_NAME]
-    console.log(refreshTokenFromCookies)
 
     if (!refreshTokenFromCookies) {
       this.authService.removeRefreshTokenToResponse(res)

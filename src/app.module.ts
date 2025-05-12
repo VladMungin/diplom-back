@@ -4,7 +4,10 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { AuthModule } from './auth/auth.module'
 import { EmployeeModule } from './emplyee/employee.module'
 import { BackupModule } from './google_services/backup.module'
+import { BackupService } from './google_services/backup.service'
+import { GoogleDriveService } from './google_services/google-drive.service'
 import { PrismaModule } from './prisma.module'
+import { PrismaService } from './prisma.service'
 import { ProjectModule } from './project/project.module'
 import { RoleModule } from './role/role.module'
 import { SpecializationModule } from './specialization/specialization.module'
@@ -14,7 +17,10 @@ import { UserModule } from './user/user.module'
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
     AuthModule,
     UserModule,
     ProjectModule,
@@ -27,5 +33,6 @@ import { UserModule } from './user/user.module'
     PrismaModule,
     ScheduleModule.forRoot(),
   ],
+  providers: [BackupService, GoogleDriveService, PrismaService],
 })
 export class AppModule {}

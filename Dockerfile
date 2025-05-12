@@ -12,4 +12,6 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-CMD ["sh", "-c", "npm run start:prod"]
+RUN mkdir -p /app/data && chmod -R 777 /app/data
+
+CMD ["sh", "-c", "npx prisma db push && npm run start:prod"]

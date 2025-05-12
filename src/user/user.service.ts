@@ -79,6 +79,7 @@ export class UserService {
         email: dto.email,
         name: dto.name || dto.email.split('@')[0],
         password: await hash(dto.password),
+        createdAt: new Date(),
       }
 
       this.logger.log(`Создание компании с именем: ${dto.companyName}`)

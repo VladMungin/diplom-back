@@ -1,158 +1,123 @@
-import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Cron, CronExpression } from '@nestjs/schedule'
-import { PrismaClient } from '@prisma/client'
-import { existsSync, statSync } from 'fs'
+import * as fs from 'fs'
+import * as path from 'path'
+import { PrismaService } from '../prisma.service'
 import { GoogleDriveService } from './google-drive.service'
 
 @Injectable()
-export class BackupService implements OnApplicationBootstrap {
+export class BackupService {
   private readonly logger = new Logger(BackupService.name)
-  private readonly databasePath: string
-  private readonly folderId: string
-  private readonly prisma: PrismaClient
+  private isRestoring = false
 
   constructor(
-    private readonly googleDriveService: GoogleDriveService,
-    private readonly configService: ConfigService
-  ) {
-    this.databasePath = this.configService.get<string>('DATABASE_PATH', '/app/data/database.db')
-    this.folderId = this.configService.get<string>('GOOGLE_DRIVE_FOLDER_ID')
-    this.prisma = new PrismaClient()
-    if (!this.folderId) {
-      throw new Error('GOOGLE_DRIVE_FOLDER_ID не указан в переменных окружения')
-    }
-    if (!existsSync(this.databasePath)) {
-      this.logger.warn(`Файл базы данных не найден по пути ${this.databasePath}. Он будет создан при первой записи.`)
-    } else {
-      const stats = statSync(this.databasePath)
-      this.logger.log(`Файл базы данных найден, размер: ${stats.size} байт`)
+    private googleDriveService: GoogleDriveService,
+    private configService: ConfigService,
+    private prismaService: PrismaService
+  ) {}
+
+  async onModuleInit() {
+    await this.restoreFromBackup()
+  }
+
+  @Cron(CronExpression.EVERY_5_MINUTES, { name: 'createBackup' })
+  async createBackup() {
+    if (this.isRestoring) return
+
+    try {
+      const dbPath = this.configService.get('DATABASE_PATH')
+      const backupName = `backup-${new Date().toISOString()}.db`
+
+      // Copy current database
+      const backupPath = path.join(path.dirname(dbPath), backupName)
+      fs.copyFileSync(dbPath, backupPath)
+
+      // Upload to Google Drive
+      await this.googleDriveService.uploadFile(backupPath, backupName)
+
+      // Clean up temporary backup file
+      fs.unlinkSync(backupPath)
+
+      this.logger.log('Backup created and uploaded successfully')
+    } catch (error) {
+      this.logger.error(`Backup failed: ${error.message}`)
     }
   }
 
-  async onApplicationBootstrap() {
-    this.logger.log('Проверка наличия бэкапа на Google Диске...')
+  async restoreFromBackup() {
+    this.isRestoring = true
     try {
-      const latestBackup = await this.googleDriveService.downloadLatestFile(this.folderId)
-      if (latestBackup) {
-        this.logger.log(`Найден существующий бэкап: ${latestBackup.fileName}`)
+      const dbPath = this.configService.get('DATABASE_PATH')
+      const dbDir = path.dirname(dbPath)
+
+      // Create directory if it doesn't exist
+      if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true })
+      }
+
+      // Try to download latest backup
+      const backupPath = await this.googleDriveService.downloadLatestBackup()
+
+      if (backupPath) {
+        // Replace current database with backup
+        fs.copyFileSync(backupPath, dbPath)
+        fs.unlinkSync(backupPath)
+        this.logger.log('Database restored from backup')
       } else {
-        this.logger.warn('Бэкап на Google Диске не найден. Создается начальный бэкап...')
-        await this.createBackup()
+        // Create new database if no backup exists
+        if (!fs.existsSync(dbPath)) {
+          fs.writeFileSync(dbPath, '')
+          await this.prismaService.$executeRaw`VACUUM`
+          await this.googleDriveService.uploadFile(dbPath, `initial-backup-${new Date().toISOString()}.db`)
+          this.logger.log('New database created and uploaded')
+        }
       }
+
+      // Ensure database schema is up to date
+      await this.prismaService.$executeRaw`PRAGMA foreign_keys = ON`
+
+      // Log data from all tables
+      await this.logTableData()
     } catch (error) {
-      this.logger.error('Не удалось проверить или создать начальный бэкап', error.stack)
-    }
-  }
-
-  @Cron(CronExpression.EVERY_5_MINUTES, { name: 'database-backup' })
-  async handleBackup() {
-    this.logger.log('Запуск запланированного бэкапа...')
-    try {
-      await this.createBackup()
-    } catch (error) {
-      this.logger.error('Запланированный бэкап не удался', error.stack)
-    }
-  }
-
-  private async createBackup() {
-    function safeStringify(obj: any): string {
-      return JSON.stringify(obj, (_, value) => (typeof value === 'bigint' ? value.toString() : value))
-    }
-
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    const backupFileName = `backup-${timestamp}.db`
-
-    try {
-      const checkpointResult = await this.prisma.$queryRaw`PRAGMA wal_checkpoint(FULL);`
-      this.logger.log(`Результат чекпоинта WAL: ${safeStringify(checkpointResult)}`)
-
-      const stats = existsSync(this.databasePath) ? statSync(this.databasePath) : null
-      if (!stats || stats.size === 0) {
-        this.logger.warn(`Файл базы данных не найден или пуст по пути ${this.databasePath}`)
-        return
-      }
-
-      // ===== User =====
-      const userCount = await this.prisma.user.count()
-      this.logger.log(`User: ${userCount}`)
-      if (userCount > 0) {
-        const users = await this.prisma.user.findMany({ take: 2, select: { id: true, email: true, name: true } })
-        this.logger.log(`User samples: ${JSON.stringify(users, null, 2)}`)
-      }
-
-      // ===== Company =====
-      const companyCount = await this.prisma.company.count()
-      this.logger.log(`Company: ${companyCount}`)
-      if (companyCount > 0) {
-        const companies = await this.prisma.company.findMany({ take: 2, select: { id: true, name: true } })
-        this.logger.log(`Company samples: ${JSON.stringify(companies, null, 2)}`)
-      }
-
-      // ===== Employee =====
-      const employeeCount = await this.prisma.employee.count()
-      this.logger.log(`Employee: ${employeeCount}`)
-      if (employeeCount > 0) {
-        const employees = await this.prisma.employee.findMany({
-          take: 2,
-          select: { id: true, fullName: true, email: true, phone: true },
-        })
-        this.logger.log(`Employee samples: ${JSON.stringify(employees, null, 2)}`)
-      }
-
-      // ===== Project =====
-      const projectCount = await this.prisma.project.count()
-      this.logger.log(`Project: ${projectCount}`)
-      if (projectCount > 0) {
-        const projects = await this.prisma.project.findMany({
-          take: 2,
-          select: { id: true, name: true, description: true },
-        })
-        this.logger.log(`Project samples: ${JSON.stringify(projects, null, 2)}`)
-      }
-
-      // ===== Task =====
-      const taskCount = await this.prisma.task.count()
-      this.logger.log(`Task: ${taskCount}`)
-      if (taskCount > 0) {
-        const tasks = await this.prisma.task.findMany({
-          take: 2,
-          select: { id: true, status: true, title: true, description: true },
-        })
-        this.logger.log(`Task samples: ${JSON.stringify(tasks, null, 2)}`)
-      }
-
-      // ===== Specialization =====
-      const specializationCount = await this.prisma.specialization.count()
-      this.logger.log(`Specialization: ${specializationCount}`)
-      if (specializationCount > 0) {
-        const specs = await this.prisma.specialization.findMany({ take: 2, select: { id: true, name: true } })
-        this.logger.log(`Specialization samples: ${JSON.stringify(specs, null, 2)}`)
-      }
-
-      // ===== Role =====
-      const roleCount = await this.prisma.role.count()
-      this.logger.log(`Role: ${roleCount}`)
-      if (roleCount > 0) {
-        const roles = await this.prisma.role.findMany({ take: 2, select: { id: true, name: true } })
-        this.logger.log(`Role samples: ${JSON.stringify(roles, null, 2)}`)
-      }
-
-      // ===== TypeOfTask =====
-      const typeCount = await this.prisma.typeOfTask.count()
-      this.logger.log(`TypeOfTask: ${typeCount}`)
-      if (typeCount > 0) {
-        const types = await this.prisma.typeOfTask.findMany({ take: 2, select: { id: true, name: true } })
-        this.logger.log(`TypeOfTask samples: ${JSON.stringify(types, null, 2)}`)
-      }
-
-      const fileId = await this.googleDriveService.uploadFile(this.databasePath, backupFileName, this.folderId)
-      this.logger.log(`Бэкап успешно создан: ${backupFileName}, ID файла: ${fileId}`)
-    } catch (error) {
-      this.logger.error(`Не удалось создать бэкап: ${backupFileName}`, error.stack)
-      throw error
+      this.logger.error(`Restore failed: ${error.message}`)
     } finally {
-      await this.prisma.$disconnect()
+      this.isRestoring = false
+    }
+  }
+
+  private async logTableData() {
+    try {
+      this.logger.log('Logging data from database tables...')
+
+      // Fetch and log data from each table
+      const users = await this.prismaService.user.findMany()
+      this.logger.log(`Users (${users.length}): ${JSON.stringify(users, null, 2)}`)
+
+      const companies = await this.prismaService.company.findMany()
+      this.logger.log(`Companies (${companies.length}): ${JSON.stringify(companies, null, 2)}`)
+
+      const employees = await this.prismaService.employee.findMany()
+      this.logger.log(`Employees (${employees.length}): ${JSON.stringify(employees, null, 2)}`)
+
+      const projects = await this.prismaService.project.findMany()
+      this.logger.log(`Projects (${projects.length}): ${JSON.stringify(projects, null, 2)}`)
+
+      const tasks = await this.prismaService.task.findMany()
+      this.logger.log(`Tasks (${tasks.length}): ${JSON.stringify(tasks, null, 2)}`)
+
+      const specializations = await this.prismaService.specialization.findMany()
+      this.logger.log(`Specializations (${specializations.length}): ${JSON.stringify(specializations, null, 2)}`)
+
+      const roles = await this.prismaService.role.findMany()
+      this.logger.log(`Roles (${roles.length}): ${JSON.stringify(roles, null, 2)}`)
+
+      const typesOfTask = await this.prismaService.typeOfTask.findMany()
+      this.logger.log(`TypesOfTask (${typesOfTask.length}): ${JSON.stringify(typesOfTask, null, 2)}`)
+
+      this.logger.log('Table data logging completed.')
+    } catch (error) {
+      this.logger.error(`Failed to log table data: ${error.message}`)
     }
   }
 }

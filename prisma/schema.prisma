@@ -15,6 +15,7 @@ model User {
   email           String     @unique
   password        String
   name            String
+  createdAt       DateTime   @default(now())
   createdEmployee Employee[]
   projects        Project[]
   role            Role       @relation(fields: [roleId], references: [id])

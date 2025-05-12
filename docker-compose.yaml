@@ -5,6 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
+      - ./prisma:/app/prisma
       - ./data:/app/data
       - ./credentials.json:/app/credentials.json
     environment:

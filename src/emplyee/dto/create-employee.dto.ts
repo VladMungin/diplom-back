@@ -17,4 +17,6 @@ export class CreateEmployeeDto {
   specialization: string
   @ApiProperty()
   userId: string
+  @ApiProperty()
+  roleId: string
 }

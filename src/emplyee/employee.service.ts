@@ -17,21 +17,38 @@ export class EmployeeService {
   ) {}
   async create(createEmployeeDto: CreateEmployeeDto) {
     const { fullName, companyId, email, password, phone, userId } = createEmployeeDto
-    const role = await this.role.create({
-      name: 'Employee',
+
+    const role = await this.prisma.role.findFirst({
+      where: {
+        id: createEmployeeDto.roleId,
+      },
     })
+
+    let currentRole: SpecializationDto | null
+
+    if (!role) {
+      currentRole = await this.role.create({
+        name: 'Employee',
+      })
+    } else {
+      currentRole = role
+    }
 
     const user = {
       name: fullName,
       email,
       password,
-      roleId: role.id,
+      roleId: currentRole.id,
       companyId,
     }
 
     let currentSpecialization: SpecializationDto | null
 
-    const specialization = await this.specialization.findOne(createEmployeeDto.specialization)
+    const specialization = await this.prisma.specialization.findFirst({
+      where: {
+        name: createEmployeeDto.specialization,
+      },
+    })
 
     if (!specialization) {
       currentSpecialization = await this.specialization.create({
@@ -54,7 +71,7 @@ export class EmployeeService {
         },
         role: {
           connect: {
-            id: role.id,
+            id: currentRole.id,
           },
         },
         specialization: {

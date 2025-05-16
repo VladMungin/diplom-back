@@ -12,7 +12,7 @@ export class SpecializationController {
     return this.specializationService.create(createSpecializationDto)
   }
 
-  @Get(':userId')
+  @Get('/user/:userId')
   findAll(@Param('userId') userId: string) {
     return this.specializationService.findAll(userId)
   }

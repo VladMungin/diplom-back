@@ -12,7 +12,7 @@ export class RoleController {
     return this.roleService.create(createRoleDto)
   }
 
-  @Get(':userId')
+  @Get('/user/:userId')
   findAll(@Param('userId') userId: string) {
     return this.roleService.findAll(userId)
   }

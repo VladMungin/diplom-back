@@ -30,7 +30,7 @@ export class RoleService {
   async update(id: string, updateRoleDto: UpdateRoleDto) {
     return this.prisma.role.update({
       where: { id },
-      data: { id, ...updateRoleDto },
+      data: updateRoleDto,
     })
   }
 

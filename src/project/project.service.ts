@@ -35,8 +35,16 @@ export class ProjectService {
         id,
       },
       include: {
-        employees: true,
-        tasks: true,
+        employees: {
+          include: {
+            specialization: true,
+          },
+        },
+        tasks: {
+          include: {
+            type: true,
+          },
+        },
       },
     })
   }

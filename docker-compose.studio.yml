@@ -8,7 +8,7 @@ services:
       - ./data:/app/data
       - ./prisma:/app/prisma
     environment:
-      - DATABASE_URL=file:/app/data/database.db
+      - DATABASE_URL=file:/app/data/database2.db
       - PRISMA_CLI_QUERY_ENGINE_TYPE=library
     ports:
       - '5555:5555'

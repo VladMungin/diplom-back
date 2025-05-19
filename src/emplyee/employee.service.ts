@@ -95,7 +95,7 @@ export class EmployeeService {
   async findAll(userId: string) {
     return await this.prisma.employee.findMany({
       where: {
-        id: userId,
+        userId,
       },
       include: {
         specialization: true,

@@ -93,13 +93,14 @@ export class EmployeeService {
   }
 
   async findAll(userId: string) {
-    return await this.prisma.user
-      .findUnique({
-        where: {
-          id: userId,
-        },
-      })
-      .createdEmployee()
+    return await this.prisma.employee.findMany({
+      where: {
+        id: userId,
+      },
+      include: {
+        specialization: true,
+      },
+    })
   }
 
   findOne(id: string) {

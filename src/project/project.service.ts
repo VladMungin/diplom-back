@@ -50,20 +50,27 @@ export class ProjectService {
   }
 
   async update(id: string, dto: UpdateProjectDto) {
-    const oldProject = await this.prisma.project.findUnique({
-      where: {
-        id,
-      },
+    const { employeeIds, ...rest } = dto
+
+    const existingProject = await this.prisma.project.findUnique({
+      where: { id },
     })
 
+    if (!existingProject) {
+      throw new Error('Project not found')
+    }
+
+    const updateData: any = { ...rest }
+
+    if (employeeIds) {
+      updateData.employees = {
+        set: employeeIds.map(id => ({ id })),
+      }
+    }
+
     return this.prisma.project.update({
-      where: {
-        id,
-      },
-      data: {
-        ...oldProject,
-        ...dto,
-      },
+      where: { id },
+      data: updateData,
     })
   }
 

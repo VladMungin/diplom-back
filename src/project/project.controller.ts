@@ -12,7 +12,7 @@ export class ProjectController {
     return this.projectService.create(createProjectDto)
   }
 
-  @Get(':userId')
+  @Get('/user/:userId')
   findAll(@Param('userId') userId: string) {
     return this.projectService.findAll(userId)
   }

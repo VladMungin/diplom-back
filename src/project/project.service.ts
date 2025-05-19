@@ -34,6 +34,10 @@ export class ProjectService {
       where: {
         id,
       },
+      include: {
+        employees: true,
+        tasks: true,
+      },
     })
   }
 

@@ -12,7 +12,7 @@ export class TypeOfTaskController {
     return this.typeOfTaskService.create(createTypeOfTaskDto)
   }
 
-  @Get(':userId')
+  @Get('/user/:userId')
   findAll(@Param('userId') userId: string) {
     return this.typeOfTaskService.findAll(userId)
   }

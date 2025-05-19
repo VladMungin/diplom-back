@@ -46,7 +46,10 @@ export class TaskService {
   }
 
   findOne(id: number) {
-    return this.prisma.task.findUnique({ where: { id } })
+    return this.prisma.task.findUnique({
+      where: { id },
+      include: { employee: true, project: true, type: true, specialization: true },
+    })
   }
 
   update(id: number, updateTaskDto: UpdateTaskDto) {

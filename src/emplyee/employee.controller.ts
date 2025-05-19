@@ -12,7 +12,7 @@ export class EmployeeController {
     return this.employeeService.create(createEmplyeeDto)
   }
 
-  @Get(':userId')
+  @Get('/user/:userId')
   findAll(@Param('userId') userId: string) {
     return this.employeeService.findAll(userId)
   }

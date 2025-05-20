@@ -41,8 +41,20 @@ export class TaskService {
     })
   }
 
-  findAll() {
-    return this.prisma.task.findMany()
+  findAll(userId: string) {
+    return this.prisma.task.findMany({
+      where: {
+        project: {
+          userId,
+        },
+      },
+      include: {
+        project: true,
+        specialization: true,
+        type: true,
+        employee: true,
+      },
+    })
   }
 
   findOne(id: number) {

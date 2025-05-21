@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { hash } from 'argon2'
 import { PrismaService } from 'src/prisma.service'
 import { RoleService } from 'src/role/role.service'
 import { SpecializationDto } from 'src/specialization/dto/create-specialization.dto'
@@ -37,7 +38,7 @@ export class EmployeeService {
     const user = {
       name: fullName,
       email,
-      password,
+      password: await hash(password),
       roleId: currentRole.id,
       companyId,
     }
@@ -103,10 +104,17 @@ export class EmployeeService {
     })
   }
 
-  findOne(id: string) {
-    return this.prisma.employee.findUnique({
+  async findOne(id: string) {
+    return await this.prisma.employee.findUnique({
       where: {
         id,
+      },
+      include: {
+        company: true,
+        projects: true,
+        role: true,
+        tasks: true,
+        user: true,
       },
     })
   }

@@ -22,9 +22,13 @@ export class UpdateTaskDto extends PartialType(CreateTaskDto) {
   @ApiProperty()
   employeeId: string
   @ApiProperty()
-  projectId: string
+  projectId?: string
   @ApiProperty()
   specializationId: string
+  @ApiProperty()
+  specialization?: string
+  @ApiProperty()
+  type?: string
   @ApiProperty()
   typeOfTaskId: string
 }

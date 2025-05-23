@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { hash } from 'argon2'
 import { PrismaService } from 'src/prisma.service'
 import { RoleService } from 'src/role/role.service'
@@ -87,7 +87,10 @@ export class EmployeeService {
     })
 
     await this.prisma.user.create({
-      data: user,
+      data: {
+        ...user,
+        id: employee.id,
+      },
     })
 
     return employee
@@ -105,18 +108,23 @@ export class EmployeeService {
   }
 
   async findOne(id: string) {
-    return await this.prisma.employee.findUnique({
-      where: {
-        id,
-      },
+    const employee = await this.prisma.employee.findUnique({
+      where: { id },
       include: {
         company: true,
         projects: true,
         role: true,
         tasks: true,
         user: true,
+        specialization: true,
       },
     })
+
+    if (!employee) {
+      throw new NotFoundException(`Employee with id ${id} not found`)
+    }
+
+    return employee
   }
 
   async update(id: string, updateEmployeeDto: UpdateEmployeeDto) {

@@ -1,8 +1,9 @@
+// update-task-log.dto.ts
 import { IsNumber, IsOptional, IsString } from 'class-validator'
 
-export class UpdateTimeLogDto {
+export class UpdateTaskLogDto {
   @IsOptional()
-  @IsNumber() // Changed to IsNumber to match Int
+  @IsNumber()
   taskId?: number
 
   @IsOptional()
@@ -12,8 +13,4 @@ export class UpdateTimeLogDto {
   @IsOptional()
   @IsNumber()
   hoursWorked?: number
-
-  @IsOptional()
-  @IsString()
-  description?: string
 }

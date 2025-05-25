@@ -1,16 +1,14 @@
+// create-task-log.dto.ts
 import { IsNumber, IsOptional, IsString } from 'class-validator'
 
-export class CreateTimeLogDto {
+export class CreateTaskLogDto {
   @IsNumber()
   taskId: number
 
   @IsString()
   employeeId: string
 
-  @IsNumber()
-  hoursWorked: number
-
   @IsOptional()
-  @IsString()
-  description?: string
+  @IsNumber()
+  hoursWorked?: number
 }

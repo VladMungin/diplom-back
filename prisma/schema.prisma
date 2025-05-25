@@ -47,6 +47,7 @@ model Employee {
   tasks            Task[]
   specialization   Specialization @relation(fields: [specializationId], references: [id])
   specializationId String
+  timeLogs         TimeLog[]
 }
 
 model Project {
@@ -75,6 +76,7 @@ model Task {
   project          Project        @relation(fields: [projectId], references: [id])
   specialization   Specialization @relation(fields: [specializationId], references: [id])
   type             TypeOfTask     @relation(fields: [typeOfTaskId], references: [id])
+  timeLogs         TimeLog[]
 }
 
 model Specialization {
@@ -104,4 +106,15 @@ model TypeOfTask {
 
   task   Task[]
   userId String?
+}
+
+model TimeLog {
+  id          String   @id @default(uuid())
+  taskId      Int
+  employeeId  String
+  hoursWorked Float
+  createdAt   DateTime @default(now())
+  description String?
+  task        Task     @relation(fields: [taskId], references: [id])
+  employee    Employee @relation(fields: [employeeId], references: [id])
 }

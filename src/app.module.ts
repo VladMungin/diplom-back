@@ -12,6 +12,7 @@ import { ProjectModule } from './project/project.module'
 import { RoleModule } from './role/role.module'
 import { SpecializationModule } from './specialization/specialization.module'
 import { TaskModule } from './task/task.module'
+import { TimeLogModule } from './time_log/time-log.module'
 import { TypeOfTaskModule } from './type_of_task/type_of_task.module'
 import { UserModule } from './user/user.module'
 
@@ -29,6 +30,7 @@ import { UserModule } from './user/user.module'
     SpecializationModule,
     RoleModule,
     TypeOfTaskModule,
+    TimeLogModule,
     BackupModule,
     PrismaModule,
     ScheduleModule.forRoot(),

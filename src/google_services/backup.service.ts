@@ -29,14 +29,11 @@ export class BackupService {
       const dbPath = this.configService.get('DATABASE_PATH')
       const backupName = `backup-${new Date().toISOString()}.db`
 
-      // Copy current database
       const backupPath = path.join(path.dirname(dbPath), backupName)
       fs.copyFileSync(dbPath, backupPath)
 
-      // Upload to Google Drive
       await this.googleDriveService.uploadFile(backupPath, backupName)
 
-      // Clean up temporary backup file
       fs.unlinkSync(backupPath)
 
       this.logger.log('Backup created and uploaded successfully')
@@ -51,21 +48,17 @@ export class BackupService {
       const dbPath = this.configService.get('DATABASE_PATH')
       const dbDir = path.dirname(dbPath)
 
-      // Create directory if it doesn't exist
       if (!fs.existsSync(dbDir)) {
         fs.mkdirSync(dbDir, { recursive: true })
       }
 
-      // Try to download latest backup
       const backupPath = await this.googleDriveService.downloadLatestBackup()
 
       if (backupPath) {
-        // Replace current database with backup
         fs.copyFileSync(backupPath, dbPath)
         fs.unlinkSync(backupPath)
         this.logger.log('Database restored from backup')
       } else {
-        // Create new database if no backup exists
         if (!fs.existsSync(dbPath)) {
           fs.writeFileSync(dbPath, '')
           await this.prismaService.$executeRaw`VACUUM`
@@ -74,10 +67,9 @@ export class BackupService {
         }
       }
 
-      // Ensure database schema is up to date
       await this.prismaService.$executeRaw`PRAGMA foreign_keys = ON`
+      this.logger.log('Applying database migrations...')
 
-      // Log data from all tables
       await this.logTableData()
     } catch (error) {
       this.logger.error(`Restore failed: ${error.message}`)
@@ -90,7 +82,6 @@ export class BackupService {
     try {
       this.logger.log('Logging data from database tables...')
 
-      // Fetch and log data from each table
       const users = await this.prismaService.user.findMany()
       this.logger.log(`Users (${users.length}): ${JSON.stringify(users, null, 2)}`)
 
@@ -103,8 +94,14 @@ export class BackupService {
       const projects = await this.prismaService.project.findMany()
       this.logger.log(`Projects (${projects.length}): ${JSON.stringify(projects, null, 2)}`)
 
-      const tasks = await this.prismaService.task.findMany()
-      this.logger.log(`Tasks (${tasks.length}): ${JSON.stringify(tasks, null, 2)}`)
+      try {
+        const tasks = await this.prismaService.task.findMany({
+          include: { createdBy: true, employee: true, project: true, specialization: true, type: true },
+        })
+        this.logger.log(`Tasks (${tasks.length}): ${JSON.stringify(tasks, null, 2)}`)
+      } catch (taskError) {
+        this.logger.error(`Failed to fetch tasks: ${taskError.message}`)
+      }
 
       const specializations = await this.prismaService.specialization.findMany()
       this.logger.log(`Specializations (${specializations.length}): ${JSON.stringify(specializations, null, 2)}`)

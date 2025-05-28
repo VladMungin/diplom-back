@@ -18,7 +18,7 @@ export class TaskLogService {
     }
 
     const updateData: any = {
-      currentEmployeeId: createTaskLogDto.employeeId,
+      employeeId: createTaskLogDto.employeeId,
     }
     if (createTaskLogDto.hoursWorked) {
       updateData.currentTime = { increment: Math.round(createTaskLogDto.hoursWorked) }
@@ -55,7 +55,7 @@ export class TaskLogService {
     await this.prisma.task.update({
       where: { id: taskId },
       data: {
-        currentEmployeeId: employeeId,
+        employeeId,
       },
     })
 
@@ -118,7 +118,7 @@ export class TaskLogService {
 
     const updateData: any = {}
     if (updateTaskLogDto.employeeId) {
-      updateData.currentEmployeeId = updateTaskLogDto.employeeId
+      updateData.employeeId = updateTaskLogDto.employeeId
     }
     if (updateTaskLogDto.hoursWorked !== undefined && taskLog.hoursWorked !== null) {
       const timeDiff = (updateTaskLogDto.hoursWorked || 0) - (taskLog.hoursWorked || 0)

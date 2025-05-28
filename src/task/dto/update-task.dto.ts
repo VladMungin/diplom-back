@@ -5,30 +5,37 @@ import { CreateTaskDto } from './create-task.dto'
 export class UpdateTaskDto extends PartialType(CreateTaskDto) {
   @ApiProperty()
   title?: string
+
   @ApiProperty()
   description?: string
+
   @ApiProperty()
   status?: string
+
   @ApiProperty()
-  createdAt?: Date
+  createdAt?: string
+
   @ApiProperty()
   timeToCompleat?: number
+
   @ApiProperty()
   currentTime?: number
+
   @ApiProperty()
   autoSet?: boolean
 
-  // Внешние ключи
   @ApiProperty()
-  employeeId: string
+  employeeId?: string
+
   @ApiProperty()
   projectId?: string
+
   @ApiProperty()
-  specializationId: string
+  specializationId?: string
+
   @ApiProperty()
-  specialization?: string
+  typeOfTaskId?: string
+
   @ApiProperty()
-  type?: string
-  @ApiProperty()
-  typeOfTaskId: string
+  createdById?: string
 }

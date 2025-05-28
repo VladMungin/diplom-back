@@ -10,33 +10,31 @@ export class TaskService {
     private readonly prisma: PrismaService,
     private readonly employee: EmployeeService
   ) {}
+
   async create(createTaskDto: CreateTaskDto) {
-    const { projectId, employeeId, specializationId, typeOfTaskId, autoSet, ...task } = createTaskDto
-    let currentEmployeeId: string | null = null
-    if (autoSet) {
+    console.log('Получен createTaskDto:', createTaskDto)
+    const { projectId, employeeId, specializationId, typeOfTaskId, autoSet, createdById, ...task } = createTaskDto
+
+    if (!createdById) {
+      throw new Error('createdById обязателен')
+    }
+
+    let employeeIdValue: string | null = null
+    if (autoSet && specializationId) {
       const leastBusyEmployee = await this.employee.getLeastBusyEmployee(specializationId)
-      currentEmployeeId = leastBusyEmployee?.id || null
+      employeeIdValue = leastBusyEmployee?.id ?? null
     } else {
-      currentEmployeeId = employeeId
+      employeeIdValue = employeeId || null
     }
 
     return this.prisma.task.create({
       data: {
         ...task,
-        project: {
-          connect: { id: projectId },
-        },
-        employee: {
-          connect: { id: currentEmployeeId },
-        },
-        specialization: {
-          connect: { id: specializationId },
-        },
-        type: {
-          connect: {
-            id: typeOfTaskId,
-          },
-        },
+        createdById,
+        projectId,
+        employeeId: employeeIdValue,
+        specializationId,
+        typeOfTaskId,
       },
     })
   }
@@ -53,6 +51,7 @@ export class TaskService {
         specialization: true,
         type: true,
         employee: true,
+        createdBy: true,
       },
     })
   }
@@ -60,45 +59,36 @@ export class TaskService {
   findOne(id: number) {
     return this.prisma.task.findUnique({
       where: { id },
-      include: { employee: true, project: true, type: true, specialization: true },
+      include: {
+        employee: true,
+        project: true,
+        type: true,
+        specialization: true,
+        createdBy: true,
+      },
     })
   }
 
   async update(id: number, updateTaskDto: UpdateTaskDto) {
-    const { employeeId, projectId, specializationId, typeOfTaskId, autoSet, ...taskData } = updateTaskDto
+    const { createdById, employeeId, projectId, specializationId, typeOfTaskId, autoSet, ...taskData } = updateTaskDto
 
-    let currentEmployeeId: string | null = null
+    let employeeIdValue: string | null = null
     if (autoSet && specializationId) {
       const leastBusyEmployee = await this.employee.getLeastBusyEmployee(specializationId)
-      currentEmployeeId = leastBusyEmployee?.id || null
+      employeeIdValue = leastBusyEmployee?.id ?? null
     } else if (employeeId) {
-      currentEmployeeId = employeeId
+      employeeIdValue = employeeId
     }
 
     return this.prisma.task.update({
       where: { id },
       data: {
         ...taskData,
-        ...(projectId && {
-          project: {
-            connect: { id: projectId },
-          },
-        }),
-        ...(currentEmployeeId && {
-          employee: {
-            connect: { id: currentEmployeeId },
-          },
-        }),
-        ...(specializationId && {
-          specialization: {
-            connect: { id: specializationId },
-          },
-        }),
-        ...(typeOfTaskId && {
-          type: {
-            connect: { id: typeOfTaskId },
-          },
-        }),
+        ...(createdById && { createdById }),
+        ...(projectId && { projectId }),
+        ...(employeeIdValue && { employeeId: employeeIdValue }),
+        ...(specializationId && { specializationId }),
+        ...(typeOfTaskId && { typeOfTaskId }),
       },
     })
   }

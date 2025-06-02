@@ -85,11 +85,11 @@ export class TaskService {
       where: { id },
       data: {
         ...taskData,
-        ...(createdById && { createdById }),
-        ...(projectId && { projectId }),
-        ...(employeeIdValue && { employeeId: employeeIdValue }),
-        ...(specializationId && { specializationId }),
-        ...(typeOfTaskId && { typeOfTaskId }),
+        ...(createdById && { createdBy: { connect: { id: createdById } } }),
+        ...(projectId && { project: { connect: { id: projectId } } }),
+        ...(employeeIdValue && { employee: { connect: { id: employeeIdValue } } }),
+        ...(specializationId && { specialization: { connect: { id: specializationId } } }),
+        ...(typeOfTaskId && { type: { connect: { id: typeOfTaskId } } }),
       },
     })
   }

@@ -45,6 +45,7 @@ export class TaskService {
         project: {
           userId,
         },
+        
       },
       include: {
         project: true,

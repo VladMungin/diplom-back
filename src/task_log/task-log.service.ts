@@ -209,4 +209,21 @@ export class TaskLogService {
     })
     return taskLogs.map(log => log.employeeId)
   }
+
+  async getTaskLogByEmployee(employeeId: string, month: number) {
+    const taskLogs = await this.prisma.taskLog.findMany({
+      where: {
+        employeeId: employeeId,
+        createdAt: {
+          gte: new Date(new Date().getFullYear(), month - 1, 1),
+          lte: new Date(new Date().getFullYear(), month, 0),
+        },
+      },
+      include: {
+        task: true,
+        employee: true,
+      },
+    })
+    return taskLogs
+  }
 }

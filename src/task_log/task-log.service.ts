@@ -1,3 +1,4 @@
+// task-log.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma.service'
 import { CreateTaskLogDto } from './dto/create-task-log.dto'
@@ -17,29 +18,28 @@ export class TaskLogService {
       throw new NotFoundException(`Employee with ID ${createTaskLogDto.employeeId} not found`)
     }
 
-    const updateData: any = {
-      employeeId: createTaskLogDto.employeeId,
-    }
-    if (createTaskLogDto.hoursWorked) {
-      updateData.currentTime = { increment: Math.round(createTaskLogDto.hoursWorked) }
-    }
-
-    await this.prisma.task.update({
-      where: { id: createTaskLogDto.taskId },
-      data: updateData,
-    })
-
-    return this.prisma.taskLog.create({
+    const taskLog = await this.prisma.taskLog.create({
       data: {
         taskId: createTaskLogDto.taskId,
         employeeId: createTaskLogDto.employeeId,
-        hoursWorked: createTaskLogDto.hoursWorked,
+        hoursWorked: createTaskLogDto.hoursWorked || 0,
       },
       include: {
         task: true,
         employee: true,
       },
     })
+
+    if (createTaskLogDto.hoursWorked) {
+      await this.prisma.task.update({
+        where: { id: createTaskLogDto.taskId },
+        data: {
+          currentTime: { increment: Math.round(createTaskLogDto.hoursWorked) },
+        },
+      })
+    }
+
+    return taskLog
   }
 
   async assignEmployee(taskId: number, employeeId: string) {
@@ -52,6 +52,18 @@ export class TaskLogService {
       throw new NotFoundException(`Employee with ID ${employeeId} not found`)
     }
 
+    const taskLog = await this.prisma.taskLog.create({
+      data: {
+        taskId,
+        employeeId,
+        hoursWorked: 0,
+      },
+      include: {
+        task: true,
+        employee: true,
+      },
+    })
+
     await this.prisma.task.update({
       where: { id: taskId },
       data: {
@@ -59,17 +71,7 @@ export class TaskLogService {
       },
     })
 
-    return this.prisma.taskLog.create({
-      data: {
-        taskId,
-        employeeId,
-        hoursWorked: null,
-      },
-      include: {
-        task: true,
-        employee: true,
-      },
-    })
+    return taskLog
   }
 
   async findAll() {
@@ -77,6 +79,27 @@ export class TaskLogService {
       include: {
         task: true,
         employee: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+  }
+
+  async findByTaskId(taskId: number) {
+    const task = await this.prisma.task.findUnique({ where: { id: taskId } })
+    if (!task) {
+      throw new NotFoundException(`Task with ID ${taskId} not found`)
+    }
+
+    return this.prisma.taskLog.findMany({
+      where: { taskId },
+      include: {
+        task: true,
+        employee: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     })
   }
@@ -116,23 +139,31 @@ export class TaskLogService {
       }
     }
 
-    const updateData: any = {}
-    if (updateTaskLogDto.employeeId) {
-      updateData.employeeId = updateTaskLogDto.employeeId
-    }
+    let timeDiff = 0
     if (updateTaskLogDto.hoursWorked !== undefined && taskLog.hoursWorked !== null) {
-      const timeDiff = (updateTaskLogDto.hoursWorked || 0) - (taskLog.hoursWorked || 0)
-      updateData.currentTime = { increment: Math.round(timeDiff) }
+      timeDiff = (updateTaskLogDto.hoursWorked || 0) - (taskLog.hoursWorked || 0)
     } else if (updateTaskLogDto.hoursWorked && taskLog.hoursWorked === null) {
-      updateData.currentTime = { increment: Math.round(updateTaskLogDto.hoursWorked) }
+      timeDiff = updateTaskLogDto.hoursWorked
     } else if (updateTaskLogDto.hoursWorked === null && taskLog.hoursWorked !== null) {
-      updateData.currentTime = { decrement: Math.round(taskLog.hoursWorked) }
+      timeDiff = -taskLog.hoursWorked
     }
 
-    if (Object.keys(updateData).length > 0) {
+    if (timeDiff !== 0) {
       await this.prisma.task.update({
         where: { id: taskId },
-        data: updateData,
+        data: {
+          currentTime: { increment: Math.round(timeDiff) },
+        },
+      })
+    }
+
+    if (updateTaskLogDto.employeeId && updateTaskLogDto.employeeId !== taskLog.employeeId) {
+      await this.prisma.taskLog.create({
+        data: {
+          taskId,
+          employeeId: updateTaskLogDto.employeeId,
+          hoursWorked: updateTaskLogDto.hoursWorked || 0,
+        },
       })
     }
 

@@ -1,41 +1,62 @@
-import { PartialType } from '@nestjs/mapped-types'
-import { ApiProperty } from '@nestjs/swagger'
-import { CreateTaskDto } from './create-task.dto'
+export class UpdateTaskStatusDto {
+  status: string
+}
 
-export class UpdateTaskDto extends PartialType(CreateTaskDto) {
-  @ApiProperty()
+// update-task-time.dto.ts
+export class UpdateTaskTimeDto {
+  currentTime: number
+}
+
+// update-task-employee.dto.ts
+export class UpdateTaskEmployeeDto {
+  employeeId?: string | null
+  autoSet?: boolean
+  specializationId?: string
+}
+// update-task.dto.ts
+import { IsInt, IsOptional, IsString, IsUUID } from 'class-validator'
+
+export class UpdateTaskDto {
+  @IsString()
+  @IsOptional()
   title?: string
 
-  @ApiProperty()
+  @IsString()
+  @IsOptional()
   description?: string
 
-  @ApiProperty()
-  status?: string
+  @IsUUID()
+  @IsOptional()
+  projectId?: string | null
 
-  @ApiProperty()
-  createdAt?: string
+  @IsUUID()
+  @IsOptional()
+  employeeId?: string | null
 
-  @ApiProperty()
-  timeToCompleat?: number
-
-  @ApiProperty()
-  currentTime?: number
-
-  @ApiProperty()
-  autoSet?: boolean
-
-  @ApiProperty()
-  employeeId?: string
-
-  @ApiProperty()
-  projectId?: string
-
-  @ApiProperty()
+  @IsUUID()
+  @IsOptional()
   specializationId?: string
 
-  @ApiProperty()
+  @IsUUID()
+  @IsOptional()
   typeOfTaskId?: string
 
-  @ApiProperty()
+  @IsOptional()
+  autoSet?: boolean
+
+  @IsUUID()
+  @IsOptional()
   createdById?: string
+
+  @IsInt()
+  @IsOptional()
+  currentTime?: number
+
+  @IsInt()
+  @IsOptional()
+  timeToCompleat?: number
+
+  @IsString()
+  @IsOptional()
+  status?: string
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
 import { CreateTaskLogDto } from './dto/create-task-log.dto'
 import { UpdateTaskLogDto } from './dto/update-task-log.dto'
 import { TaskLogService } from './task-log.service'
@@ -30,6 +30,11 @@ export class TaskLogController {
   @Get('tasks/:taskId/employees')
   getEmployeeIds(@Param('taskId') taskId: string) {
     return this.taskLogService.getEmployeeIdsForTask(parseInt(taskId))
+  }
+
+  @Get('employee/:employeeId')
+  getTaskLogByEmployee(@Param('employeeId') employeeId: string, @Query('month') month: string) {
+    return this.taskLogService.getTaskLogByEmployee(employeeId, parseInt(month))
   }
 
   @Patch(':id')

@@ -3,13 +3,13 @@ import { CreateEmployeeDto } from './dto/create-employee.dto'
 import { UpdateEmployeeDto } from './dto/update-employee.dto'
 import { EmployeeService } from './employee.service'
 
-@Controller('emplyee')
+@Controller('employee')
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
 
   @Post()
-  create(@Body() createEmplyeeDto: CreateEmployeeDto) {
-    return this.employeeService.create(createEmplyeeDto)
+  create(@Body() createEmployeeDto: CreateEmployeeDto) {
+    return this.employeeService.create(createEmployeeDto)
   }
 
   @Get('/user/:userId')
@@ -20,6 +20,11 @@ export class EmployeeController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.employeeService.findOne(id)
+  }
+
+  @Get('/least-busy-employee/:specializationId')
+  getLeastBusyEmployee(@Param('specializationId') id: string) {
+    return this.employeeService.getLeastBusyEmployee(id)
   }
 
   @Patch(':id')

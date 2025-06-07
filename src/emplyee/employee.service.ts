@@ -103,6 +103,7 @@ export class EmployeeService {
       },
       include: {
         specialization: true,
+        role: true,
       },
     })
   }
@@ -189,9 +190,7 @@ export class EmployeeService {
     const employeesWithTaskTimes = await this.prisma.employee.findMany({
       where: {
         specializationId: specializationId,
-        tasks: {
-          some: {}, // Убеждаемся, что у сотрудника есть хотя бы одна задача
-        },
+     
       },
       include: {
         tasks: {

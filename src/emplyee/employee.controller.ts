@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
 import { CreateEmployeeDto } from './dto/create-employee.dto'
 import { UpdateEmployeeDto } from './dto/update-employee.dto'
 import { EmployeeService } from './employee.service'
@@ -13,8 +13,8 @@ export class EmployeeController {
   }
 
   @Get('/user/:userId')
-  findAll(@Param('userId') userId: string) {
-    return this.employeeService.findAll(userId)
+  findAll(@Param('userId') userId: string, @Query('specializationId') specializationId?: string) {
+    return this.employeeService.findAll(userId, specializationId)
   }
 
   @Get(':id')

@@ -14,7 +14,7 @@ export class CreateEmployeeDto {
   @ApiProperty()
   companyId: string
   @ApiProperty()
-  specialization: string
+  specializationId: string
   @ApiProperty()
   userId: string
   @ApiProperty()

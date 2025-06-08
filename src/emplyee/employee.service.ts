@@ -43,22 +43,11 @@ export class EmployeeService {
       companyId,
     }
 
-    let currentSpecialization: SpecializationDto | null
-
     const specialization = await this.prisma.specialization.findFirst({
       where: {
-        name: createEmployeeDto.specialization,
+        id: createEmployeeDto.specializationId,
       },
     })
-
-    if (!specialization) {
-      currentSpecialization = await this.specialization.create({
-        name: createEmployeeDto.specialization,
-        userId: userId,
-      })
-    } else {
-      currentSpecialization = specialization
-    }
 
     const employee = await this.prisma.employee.create({
       data: {
@@ -77,7 +66,7 @@ export class EmployeeService {
         },
         specialization: {
           connect: {
-            id: currentSpecialization.id,
+            id: specialization.id,
           },
         },
         user: {
@@ -96,10 +85,11 @@ export class EmployeeService {
     return employee
   }
 
-  async findAll(userId: string) {
+  async findAll(userId: string, specializationId?: string) {
     return await this.prisma.employee.findMany({
       where: {
         userId,
+        ...(specializationId && { specializationId }),
       },
       include: {
         specialization: true,
@@ -174,7 +164,7 @@ export class EmployeeService {
 
     this.prisma.user.delete({
       where: {
-        email: employee.email,
+        id: employee.id,
       },
     })
 
@@ -186,11 +176,15 @@ export class EmployeeService {
   }
 
   async getLeastBusyEmployee(specializationId: string) {
-    // Находим всех сотрудников с указанной специализацией и хотя бы одной задачей
+    // Validate specializationId (optional, depending on requirements)
+    if (!specializationId) {
+      throw new Error('Specialization ID is required')
+    }
+
+    // Fetch employees with tasks, selecting only necessary fields
     const employeesWithTaskTimes = await this.prisma.employee.findMany({
       where: {
-        specializationId: specializationId,
-     
+        specializationId,
       },
       include: {
         tasks: {
@@ -199,28 +193,44 @@ export class EmployeeService {
           },
         },
       },
+      // Optional: Add take to limit results for performance
     })
 
-    // Если нет подходящих сотрудников, возвращаем null или выбрасываем ошибку
+    // Handle case where no employees are found
     if (employeesWithTaskTimes.length === 0) {
-      return null
-      // или throw new Error('No employees with the specified specialization and tasks found');
+      throw new Error('No employees found with the specified specialization')
     }
 
-    // Рассчитываем общее время задач для каждого сотрудника
+    // Calculate total time for each employee
     const employeesWithTotalTime = employeesWithTaskTimes.map(employee => {
-      const totalTime = employee.tasks.reduce((sum, task) => sum + task.currentTime, 0)
+      const totalTime = employee.tasks.reduce((sum, task) => {
+        // Ensure currentTime is a number, default to 0 if null/undefined
+        const time = typeof task.currentTime === 'number' ? task.currentTime : 0
+        return sum + time
+      }, 0)
       return {
         ...employee,
         totalTime,
       }
     })
 
-    // Находим сотрудника с минимальным общим временем задач
-    const leastBusyEmployee = employeesWithTotalTime.reduce((prev, current) =>
-      prev.totalTime < current.totalTime ? prev : current
-    )
+    // If only one employee, return it directly
+    if (employeesWithTotalTime.length === 1) {
+      return employeesWithTotalTime[0]
+    }
 
-    return leastBusyEmployee
+    // Find employee with minimum total time
+    const leastBusyEmployee = employeesWithTotalTime.reduce((prev, current) => {
+      // Handle tie-breaking (e.g., by employee ID or other criteria)
+      if (prev.totalTime === current.totalTime) {
+        // Example: Choose employee with lower ID as tiebreaker
+        return prev.id < current.id ? prev : current
+      }
+      return prev.totalTime < current.totalTime ? prev : current
+    })
+
+    // Optionally, strip totalTime from the result to match Employee type
+    const { ...employeeData } = leastBusyEmployee
+    return employeeData
   }
 }

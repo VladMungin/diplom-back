@@ -4,6 +4,7 @@ import { verify } from 'argon2'
 import { Response } from 'express'
 import { UserService } from 'src/user/user.service'
 import { AuthDto } from './dto/auth.dto'
+import { LoginDTO } from './dto/login.dto.'
 
 @Injectable()
 export class AuthService {
@@ -14,7 +15,7 @@ export class AuthService {
     private userService: UserService
   ) {}
 
-  async login(dto: AuthDto) {
+  async login(dto: LoginDTO) {
     //eslint-disable-next-line
     const { password, ...user } = await this.validateUser(dto)
 
@@ -56,7 +57,7 @@ export class AuthService {
     return { accessToken, refreshToken }
   }
 
-  private async validateUser(dto: AuthDto) {
+  private async validateUser(dto: AuthDto | LoginDTO) {
     const user = await this.userService.getByEmail(dto.email)
 
     if (!user) throw new NotFoundException('Пользователь не найден')

@@ -92,6 +92,7 @@ export class EmployeeService {
         ...(specializationId && { specializationId }),
       },
       include: {
+        projects: true,
         specialization: true,
         role: true,
       },

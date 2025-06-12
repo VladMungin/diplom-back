@@ -115,6 +115,7 @@ model TaskLog {
   id          String   @id @default(uuid())
   taskId      Int
   employeeId  String
+  action      String?
   hoursWorked Float?
   createdAt   DateTime @default(now())
   task        Task     @relation(fields: [taskId], references: [id])

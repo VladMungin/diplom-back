@@ -1,6 +1,7 @@
 // task-log.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma.service'
+import { ACTION_ENUM } from './dto/__constants'
 import { CreateTaskLogDto } from './dto/create-task-log.dto'
 import { UpdateTaskLogDto } from './dto/update-task-log.dto'
 
@@ -23,6 +24,7 @@ export class TaskLogService {
         taskId: createTaskLogDto.taskId,
         employeeId: createTaskLogDto.employeeId,
         hoursWorked: createTaskLogDto.hoursWorked || 0,
+        action: ACTION_ENUM.CREATE,
       },
       include: {
         task: true,
@@ -57,6 +59,7 @@ export class TaskLogService {
         taskId,
         employeeId,
         hoursWorked: 0,
+        action: ACTION_ENUM.CHANGE_EMPLOYEE,
       },
       include: {
         task: true,
@@ -118,7 +121,21 @@ export class TaskLogService {
     return taskLog
   }
 
-  async update(id: string, updateTaskLogDto: UpdateTaskLogDto) {
+  async findOneByTaskId(taskId: number) {
+    const taskLog = await this.prisma.taskLog.findFirst({
+      where: { taskId },
+      include: {
+        task: true,
+        employee: true,
+      },
+    })
+    if (!taskLog) {
+      throw new NotFoundException(`TaskLog с taskId ${taskId} не найден`)
+    }
+    return taskLog
+  }
+
+  async update(id: string, updateTaskLogDto: UpdateTaskLogDto, action: string) {
     const taskLog = await this.prisma.taskLog.findUnique({ where: { id } })
     if (!taskLog) {
       throw new NotFoundException(`TaskLog with ID ${id} not found`)
@@ -163,6 +180,7 @@ export class TaskLogService {
           taskId,
           employeeId: updateTaskLogDto.employeeId,
           hoursWorked: updateTaskLogDto.hoursWorked || 0,
+          action,
         },
       })
     }

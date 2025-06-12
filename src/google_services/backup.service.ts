@@ -28,12 +28,20 @@ export class BackupService {
     try {
       const dbPath = this.configService.get('DATABASE_PATH')
       const backupName = `backup-${new Date().toISOString()}.db`
-
       const backupPath = path.join(path.dirname(dbPath), backupName)
+
+      const files = await this.googleDriveService.listFiles()
+      if (files.length >= 5) {
+        const sortedFiles = files.sort((a, b) => a.name.localeCompare(b.name))
+        const filesToDelete = sortedFiles.slice(0, files.length - 4)
+        for (const file of filesToDelete) {
+          await this.googleDriveService.deleteFile(file.id)
+          this.logger.log(`Deleted old backup file: ${file.name}`)
+        }
+      }
+
       fs.copyFileSync(dbPath, backupPath)
-
       await this.googleDriveService.uploadFile(backupPath, backupName)
-
       fs.unlinkSync(backupPath)
 
       this.logger.log('Backup created and uploaded successfully')

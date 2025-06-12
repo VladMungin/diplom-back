@@ -1,6 +1,7 @@
 // task.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { EmployeeService } from 'src/emplyee/employee.service'
+import { ACTION_ENUM } from 'src/task_log/dto/__constants'
 import { PrismaService } from './../prisma.service'
 import { CreateTaskDto } from './dto/create-task.dto'
 import { UpdateTaskEmployeeDto, UpdateTaskStatusDto, UpdateTaskTimeDto } from './dto/update-task.dto'
@@ -76,13 +77,13 @@ export class TaskService {
       },
     })
 
-    // Создаем запись в TaskLog, если есть employeeIdValue
     if (employeeIdValue) {
       await this.prisma.taskLog.create({
         data: {
           taskId: taskCreated.id,
           employeeId: employeeIdValue,
-          hoursWorked: 0, // Начальное значение времени
+          hoursWorked: 0,
+          action: ACTION_ENUM.CREATE,
         },
       })
     }
@@ -138,6 +139,16 @@ export class TaskService {
       throw new NotFoundException(`Task with ID ${id} not found`)
     }
 
+    if (currentTask.employeeId) {
+      await this.prisma.taskLog.create({
+        data: {
+          taskId: id,
+          employeeId: currentTask.employeeId,
+          action: ACTION_ENUM.CHANGE_STATUS,
+        },
+      })
+    }
+
     return this.prisma.task.update({
       where: { id },
       data: { status },
@@ -158,13 +169,13 @@ export class TaskService {
       throw new NotFoundException(`Task with ID ${id} not found`)
     }
 
-    // Создаём запись в TaskLog, если время изменилось
     if (currentTask.employeeId) {
       await this.prisma.taskLog.create({
         data: {
           taskId: id,
           employeeId: currentTask.employeeId,
           hoursWorked: Number(currentTime),
+          action: ACTION_ENUM.CHANGE_TIME,
         },
       })
     }
@@ -217,6 +228,7 @@ export class TaskService {
           taskId: id,
           employeeId: employeeIdValue,
           hoursWorked: currentTask.currentTime,
+          action: ACTION_ENUM.CHANGE_EMPLOYEE,
         },
       })
     }

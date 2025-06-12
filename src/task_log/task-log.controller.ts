@@ -22,9 +22,14 @@ export class TaskLogController {
     return this.taskLogService.findAll()
   }
 
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.taskLogService.findOne(id)
+  // }
+
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.taskLogService.findOne(id)
+  findOneByTaskId(@Param('id') id: string) {
+    return this.taskLogService.findOneByTaskId(+id)
   }
 
   @Get('tasks/:taskId/employees')
@@ -38,8 +43,8 @@ export class TaskLogController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTaskLogDto: UpdateTaskLogDto) {
-    return this.taskLogService.update(id, updateTaskLogDto)
+  update(@Param('id') id: string, @Body() updateTaskLogDto: UpdateTaskLogDto, action: string) {
+    return this.taskLogService.update(id, updateTaskLogDto, action)
   }
 
   @Delete(':id')

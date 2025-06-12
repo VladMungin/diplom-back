@@ -90,4 +90,33 @@ export class GoogleDriveService {
       return null
     }
   }
+
+  async listFiles(): Promise<{ id: string; name: string; createdTime: string }[]> {
+    try {
+      const folderId = this.configService.get('GOOGLE_DRIVE_FOLDER_ID')
+
+      const response = await this.drive.files.list({
+        q: `'${folderId}' in parents and mimeType='application/x-sqlite3'`,
+        fields: 'files(id, name, createdTime)',
+        orderBy: 'createdTime desc',
+      })
+
+      const files = response.data.files || []
+      this.logger.log(`Found ${files.length} backup files in Google Drive`)
+      return files
+    } catch (error) {
+      this.logger.error(`Failed to list files: ${error.message}`)
+      throw error
+    }
+  }
+
+  async deleteFile(fileId: string): Promise<void> {
+    try {
+      await this.drive.files.delete({ fileId })
+      this.logger.log(`File with ID ${fileId} deleted successfully`)
+    } catch (error) {
+      this.logger.error(`Failed to delete file with ID ${fileId}: ${error.message}`)
+      throw error
+    }
+  }
 }

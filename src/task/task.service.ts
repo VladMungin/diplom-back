@@ -96,7 +96,6 @@ export class TaskService {
         project: {
           userId,
         },
-        
       },
       include: {
         project: true,
@@ -226,6 +225,7 @@ export class TaskService {
       where: { id },
       data: {
         employee: employeeIdValue ? { connect: { id: employeeIdValue } } : { disconnect: true },
+        status: 'PENDING',
       },
       include: {
         taskLogs: {

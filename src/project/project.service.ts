@@ -42,6 +42,8 @@ export class ProjectService {
         },
         tasks: {
           include: {
+            employee: true,
+            Employee: true,
             type: true,
           },
         },
